@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Deputation Dashboard</title>
+    
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- External Scripts -->
+    <!-- PapaParse for CSV reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+    <!-- Lucide for Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <!-- App Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="app-container">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-logo">
+                <i data-lucide="building-2"></i>
+                <h1><span class="gradient-text">DEPUTATION</span> VACANCIES</h1>
+            </div>
+            <div class="header-actions">
+                <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+                    <i data-lucide="moon"></i>
+                </button>
+            </div>
+        </header>
+
+        <!-- Main Layout -->
+        <main class="main-layout">
+            
+            <!-- Filters Sidebar -->
+            <aside class="filters-sidebar">
+                <div class="filters-header">
+                    <h2><i data-lucide="filter"></i> Filters</h2>
+                    <button id="clearFiltersBtn" class="text-btn">Clear All</button>
+                </div>
+
+                <div class="filter-group">
+                    <label for="searchPost">Search text</label>
+                    <div class="input-icon">
+                        <i data-lucide="search"></i>
+                        <input type="text" id="searchPost" placeholder="e.g. Director, Finance...">
+                    </div>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterLevel">Pay Level</label>
+                    <select id="filterLevel">
+                        <option value="">All Levels</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterMinistry">Ministry</label>
+                    <select id="filterMinistry">
+                        <option value="">All Ministries</option>
+                    </select>
+                </div>
+                
+                <div class="filter-group">
+                    <label for="filterLocation">Location</label>
+                    <select id="filterLocation">
+                        <option value="">All Locations</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label for="filterStatus">Status</label>
+                    <select id="filterStatus">
+                        <option value="">All</option>
+                        <option value="Active" selected>Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
+                </div>
+            </aside>
+
+            <!-- Dashboard Content -->
+            <section class="dashboard-content">
+                <!-- KPI Cards -->
+                <div class="kpi-grid" id="kpiGrid">
+                    <!-- Cards will be populated by JS -->
+                </div>
+
+                <!-- View Toggle & Sort -->
+                <div class="content-toolbar">
+                    <div class="results-count" id="resultsCount">Loading...</div>
+                    <div class="toolbar-actions">
+                        <div class="view-toggles">
+                            <button id="btnTableView" class="view-btn active" title="Table View">
+                                <i data-lucide="table-2"></i>
+                            </button>
+                            <button id="btnCardView" class="view-btn" title="Card View">
+                                <i data-lucide="layout-grid"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Data Container -->
+                <div id="dataContainer" class="data-container view-table">
+                    <!-- Content will be populated by JS -->
+                    <div class="loading-state">
+                        <i data-lucide="loader-2" class="spin"></i>
+                        <p>Loading Deputation Data...</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- App Logic -->
+    <script src="app.js"></script>
+</body>
+</html>
