@@ -219,6 +219,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderMainContent() {
+        dataContainer.style.animation = 'none';
+        void dataContainer.offsetWidth; // trigger reflow
+        dataContainer.style.animation = null;
+
         if (filteredData.length === 0) {
             dataContainer.innerHTML = `<div class="loading-state"><p>No vacancies found matching your filters.</p></div>`;
             return;
