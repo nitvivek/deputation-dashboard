@@ -153,11 +153,15 @@ document.addEventListener('DOMContentLoaded', () => {
             // Filter by My Pay Level
             if (sMyPayLevel) {
                 // To display it MUST match Req_Level1 or Req_Level2
-                if (item.Req_Level1 != sMyPayLevel && item.Req_Level2 != sMyPayLevel) {
+                const req1 = String(item.Req_Level1 || '');
+                const req2 = String(item.Req_Level2 || '');
+                const nums1 = req1 ? (req1.match(/\d+/g) || []) : [];
+                const nums2 = req2 ? (req2.match(/\d+/g) || []) : [];
+                if (!nums1.includes(sMyPayLevel) && !nums2.includes(sMyPayLevel) && req1 !== sMyPayLevel && req2 !== sMyPayLevel) {
                     match = false;
                 }
             }
-
+            
             return match;
         });
 
