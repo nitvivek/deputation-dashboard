@@ -260,7 +260,7 @@ input:focus, select:focus {
     color:var(--text-primary); cursor:pointer; font-size:1.4rem;
 }
 
-/* Misc */
+/* Badges */
 .badge { padding:0.4rem 0.9rem; border-radius:9999px; font-size:0.75rem; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
 .badge-active { background:rgba(34,197,94,0.15); color:var(--success-color); border:1px solid rgba(34,197,94,0.3); }
 .badge-level { background:rgba(34,211,238,0.15); color:var(--primary-color); border:1px solid rgba(34,211,238,0.3); }
