@@ -1,4 +1,6 @@
 document.addEventListener('DOMContentLoaded', () => {
+    console.log('🚀 App started');
+
     lucide.createIcons();
 
     // Elements
@@ -9,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterLevel = document.getElementById('filterLevel');
     const filterMinistry = document.getElementById('filterMinistry');
     const filterLocation = document.getElementById('filterLocation');
-    const filterStatus = document.getElementById('filterStatus');
     const themeToggle = document.getElementById('themeToggle');
 
     let rawData = [];
@@ -34,13 +35,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Loading
     dataContainer.innerHTML = `
-        <div style="height:400px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:15px;color:#94a3b8">
-            <i data-lucide="loader-2" class="spin" style="width:60px;height:60px"></i>
-            <p style="font-size:1.2rem">Loading Deputation Vacancies...</p>
+        <div style="height:400px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:#94a3b8">
+            <i data-lucide="loader-2" class="spin" style="width:70px;height:70px"></i>
+            <p style="font-size:1.25rem">Loading vacancies from Google Sheet...</p>
         </div>`;
     lucide.createIcons();
 
-    // Load Data
+    // Load CSV
     Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vRtNK339wNsCATEu20kc0XPlFjHKKahfxZqunH3Gll2mA-9witdSGrKB3-1jmeauT5gbwkNg5Y8rCKk/pub?output=csv', {
         download: true,
         header: true,
@@ -52,8 +53,9 @@ document.addEventListener('DOMContentLoaded', () => {
             populateFilters();
             renderDashboard();
         },
-        error: function() {
-            dataContainer.innerHTML = `<div style="padding:60px;text-align:center;color:#f43f5e">Failed to load data. Please refresh.</div>`;
+        error: function(err) {
+            console.error('PapaParse Error:', err);
+            dataContainer.innerHTML = `<div style="padding:60px;text-align:center;color:#f43f5e">Failed to load data.<br>Please refresh the page.</div>`;
         }
     });
 
@@ -66,10 +68,10 @@ document.addEventListener('DOMContentLoaded', () => {
             filterMyPayLevel.appendChild(opt);
         }
 
-        // Other dropdowns
-        const levels = [...new Set(rawData.map(item => item.Level_Text).filter(Boolean))].sort();
-        const ministries = [...new Set(rawData.map(item => item.Ministry).filter(Boolean))].sort();
-        const locations = [...new Set(rawData.map(item => item.Location_State).filter(Boolean))].sort();
+        // Other filters
+        const levels = [...new Set(rawData.map(i => i.Level_Text).filter(Boolean))].sort();
+        const ministries = [...new Set(rawData.map(i => i.Ministry).filter(Boolean))].sort();
+        const locations = [...new Set(rawData.map(i => i.Location_State).filter(Boolean))].sort();
 
         levels.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = l; filterLevel.appendChild(o); });
         ministries.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; filterMinistry.appendChild(o); });
@@ -77,6 +79,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderDashboard() {
+        console.log('Rendering dashboard with', rawData.length, 'items');
+
         // KPIs
         const activeCount = rawData.filter(d => d.Status === "Active").length;
         kpiGrid.innerHTML = `
@@ -109,7 +113,7 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `<tr>
                 <td><strong>${item.Post_Name}</strong></td>
                 <td><span class="badge badge-level">${item.Level_Text}</span></td>
-                <td>${item.Ministry}<br><small>${item.Organisation}</small></td>
+                <td>${item.Ministry}<br><small>${item.Organisation || ''}</small></td>
                 <td>${item.Location_City}, ${item.Location_State}</td>
                 <td><span class="${isClosing ? 'days-left closing' : 'days-left'}">${item.Days_Left} days</span></td>
             </tr>`;
@@ -120,5 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dataContainer.innerHTML = html;
         resultsCount.textContent = `${rawData.length} vacancies`;
         lucide.createIcons();
+
+        console.log('✅ Dashboard rendered successfully');
     }
 });
