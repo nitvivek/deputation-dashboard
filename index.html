@@ -36,7 +36,6 @@
         </header>
 
         <main class="main-layout">
-            <!-- Filters -->
             <aside class="filters-sidebar glass-panel">
                 <div class="filters-header">
                     <h2><i data-lucide="filter"></i> Filters</h2>
@@ -53,30 +52,22 @@
 
                 <div class="filter-group">
                     <label>My Pay Level</label>
-                    <select id="filterMyPayLevel">
-                        <option value="">Any Level</option>
-                    </select>
+                    <select id="filterMyPayLevel"><option value="">Any Level</option></select>
                 </div>
 
                 <div class="filter-group">
                     <label>Pay Level</label>
-                    <select id="filterLevel">
-                        <option value="">All Levels</option>
-                    </select>
+                    <select id="filterLevel"><option value="">All Levels</option></select>
                 </div>
 
                 <div class="filter-group">
                     <label>Ministry</label>
-                    <select id="filterMinistry">
-                        <option value="">All Ministries</option>
-                    </select>
+                    <select id="filterMinistry"><option value="">All Ministries</option></select>
                 </div>
 
                 <div class="filter-group">
                     <label>Location</label>
-                    <select id="filterLocation">
-                        <option value="">All Locations</option>
-                    </select>
+                    <select id="filterLocation"><option value="">All Locations</option></select>
                 </div>
 
                 <div class="filter-group">
@@ -89,15 +80,10 @@
                 </div>
             </aside>
 
-            <!-- Main Content -->
             <section class="dashboard-content">
-                <!-- KPIs -->
                 <div class="kpi-grid" id="kpiGrid"></div>
-
-                <!-- Active Filters -->
                 <div id="activeFilters" class="active-filters"></div>
 
-                <!-- Toolbar -->
                 <div class="content-toolbar">
                     <div class="results-count" id="resultsCount">Loading vacancies...</div>
                     <div class="view-toggles">
@@ -106,15 +92,12 @@
                     </div>
                 </div>
 
-                <!-- Data Container -->
-                <div id="dataContainer" class="data-container view-table">
-                    <!-- Populated by JS -->
-                </div>
+                <div id="dataContainer" class="data-container view-table"></div>
             </section>
         </main>
     </div>
 
-    <!-- DETAIL MODAL -->
+    <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content glass-panel">
             <button id="closeModal" class="modal-close"><i data-lucide="x"></i></button>
