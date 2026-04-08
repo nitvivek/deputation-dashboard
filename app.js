@@ -1,130 +1,66 @@
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 App started');
-
     lucide.createIcons();
 
-    // Elements
     const kpiGrid = document.getElementById('kpiGrid');
     const resultsCount = document.getElementById('resultsCount');
     const dataContainer = document.getElementById('dataContainer');
-    const filterMyPayLevel = document.getElementById('filterMyPayLevel');
-    const filterLevel = document.getElementById('filterLevel');
-    const filterMinistry = document.getElementById('filterMinistry');
-    const filterLocation = document.getElementById('filterLocation');
-    const themeToggle = document.getElementById('themeToggle');
 
-    let rawData = [];
-
-    // Theme Toggle
-    const currentTheme = localStorage.getItem('theme') || 'dark';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    updateThemeIcon();
-
-    function updateThemeIcon() {
-        const icon = document.documentElement.getAttribute('data-theme') === 'dark' ? 'sun' : 'moon';
-        themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
-        lucide.createIcons();
-    }
-
-    themeToggle.addEventListener('click', () => {
-        const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
-        document.documentElement.setAttribute('data-theme', newTheme);
-        localStorage.setItem('theme', newTheme);
-        updateThemeIcon();
-    });
-
-    // Loading
+    // Strong loading message
     dataContainer.innerHTML = `
-        <div style="height:400px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;color:#94a3b8">
-            <i data-lucide="loader-2" class="spin" style="width:70px;height:70px"></i>
-            <p style="font-size:1.25rem">Loading vacancies from Google Sheet...</p>
+        <div style="padding:80px 20px; text-align:center; background:#0f172a; border-radius:16px; color:#94a3b8; font-size:1.3rem;">
+            <i data-lucide="loader-2" class="spin" style="width:70px;height:70px;display:block;margin:0 auto 20px;"></i>
+            Loading 53 vacancies...
         </div>`;
     lucide.createIcons();
 
-    // Load CSV
     Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vRtNK339wNsCATEu20kc0XPlFjHKKahfxZqunH3Gll2mA-9witdSGrKB3-1jmeauT5gbwkNg5Y8rCKk/pub?output=csv', {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: function(results) {
-            rawData = results.data.filter(row => row.Vacancy_ID);
-            console.log('✅ Loaded', rawData.length, 'vacancies');
+            const data = results.data.filter(row => row.Vacancy_ID);
 
-            populateFilters();
-            renderDashboard();
-        },
-        error: function(err) {
-            console.error('PapaParse Error:', err);
-            dataContainer.innerHTML = `<div style="padding:60px;text-align:center;color:#f43f5e">Failed to load data.<br>Please refresh the page.</div>`;
+            // KPIs with inline styles
+            kpiGrid.innerHTML = `
+                <div style="background:#0f172a;border:1px solid #334155;border-radius:16px;padding:25px;text-align:center;">
+                    <div style="font-size:0.9rem;color:#94a3b8;font-weight:600;">TOTAL VACANCIES</div>
+                    <div style="font-size:3rem;font-weight:800;color:#22d3ee;">${data.length}</div>
+                </div>
+                <div style="background:#0f172a;border:1px solid #334155;border-radius:16px;padding:25px;text-align:center;">
+                    <div style="font-size:0.9rem;color:#94a3b8;font-weight:600;">ACTIVE</div>
+                    <div style="font-size:3rem;font-weight:800;color:#22c55e;">${data.filter(d => d.Status === "Active").length}</div>
+                </div>`;
+
+            // Table with very strong inline styles
+            let html = `<div style="background:#0f172a;border-radius:16px;overflow:hidden;border:1px solid #334155;">
+                <table style="width:100%;border-collapse:collapse;font-size:1rem;">
+                    <thead>
+                        <tr style="background:#1e2937;">
+                            <th style="padding:18px 16px;text-align:left;color:#94a3b8;">Post Name</th>
+                            <th style="padding:18px 16px;text-align:left;color:#94a3b8;">Level</th>
+                            <th style="padding:18px 16px;text-align:left;color:#94a3b8;">Ministry</th>
+                            <th style="padding:18px 16px;text-align:left;color:#94a3b8;">Location</th>
+                            <th style="padding:18px 16px;text-align:left;color:#94a3b8;">Days Left</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+
+            data.forEach(item => {
+                const isClosing = parseInt(item.Days_Left) > 0 && parseInt(item.Days_Left) <= 15;
+                html += `<tr style="border-top:1px solid #334155;">
+                    <td style="padding:18px 16px;"><strong>${item.Post_Name}</strong></td>
+                    <td style="padding:18px 16px;">${item.Level_Text}</td>
+                    <td style="padding:18px 16px;">${item.Ministry}</td>
+                    <td style="padding:18px 16px;">${item.Location_City}, ${item.Location_State}</td>
+                    <td style="padding:18px 16px;color:${isClosing ? '#f43f5e' : '#94a3b8'};">${item.Days_Left} days</td>
+                </tr>`;
+            });
+
+            html += `</tbody></table></div>`;
+
+            dataContainer.innerHTML = html;
+            resultsCount.textContent = `${data.length} vacancies`;
+            lucide.createIcons();
         }
     });
-
-    function populateFilters() {
-        // My Pay Level
-        for (let i = 18; i >= 1; i--) {
-            const opt = document.createElement('option');
-            opt.value = i;
-            opt.textContent = `Level ${i}`;
-            filterMyPayLevel.appendChild(opt);
-        }
-
-        // Other filters
-        const levels = [...new Set(rawData.map(i => i.Level_Text).filter(Boolean))].sort();
-        const ministries = [...new Set(rawData.map(i => i.Ministry).filter(Boolean))].sort();
-        const locations = [...new Set(rawData.map(i => i.Location_State).filter(Boolean))].sort();
-
-        levels.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = l; filterLevel.appendChild(o); });
-        ministries.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; filterMinistry.appendChild(o); });
-        locations.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = l; filterLocation.appendChild(o); });
-    }
-
-    function renderDashboard() {
-        console.log('Rendering dashboard with', rawData.length, 'items');
-
-        // KPIs
-        const activeCount = rawData.filter(d => d.Status === "Active").length;
-        kpiGrid.innerHTML = `
-            <div class="kpi-card">
-                <span class="kpi-title">TOTAL VACANCIES</span>
-                <span class="kpi-value">${rawData.length}</span>
-            </div>
-            <div class="kpi-card">
-                <span class="kpi-title">ACTIVE</span>
-                <span class="kpi-value">${activeCount}</span>
-            </div>
-        `;
-
-        // Table
-        let html = `<div class="table-wrapper">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>Post Name</th>
-                        <th>Level</th>
-                        <th>Ministry</th>
-                        <th>Location</th>
-                        <th>Days Left</th>
-                    </tr>
-                </thead>
-                <tbody>`;
-
-        rawData.forEach(item => {
-            const isClosing = parseInt(item.Days_Left) > 0 && parseInt(item.Days_Left) <= 15;
-            html += `<tr>
-                <td><strong>${item.Post_Name}</strong></td>
-                <td><span class="badge badge-level">${item.Level_Text}</span></td>
-                <td>${item.Ministry}<br><small>${item.Organisation || ''}</small></td>
-                <td>${item.Location_City}, ${item.Location_State}</td>
-                <td><span class="${isClosing ? 'days-left closing' : 'days-left'}">${item.Days_Left} days</span></td>
-            </tr>`;
-        });
-
-        html += `</tbody></table></div>`;
-
-        dataContainer.innerHTML = html;
-        resultsCount.textContent = `${rawData.length} vacancies`;
-        lucide.createIcons();
-
-        console.log('✅ Dashboard rendered successfully');
-    }
 });
