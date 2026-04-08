@@ -3,24 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deputation Dashboard</title>
-    
-    <!-- Google Fonts: Inter -->
+    <title>Deputation Vacancies</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    
-    <!-- External Scripts -->
-    <!-- PapaParse for CSV reading -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
-    <!-- Lucide for Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
-
-    <!-- App Styles -->
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Animated Background Shapes -->
     <div class="bg-shapes">
         <div class="shape shape-1"></div>
         <div class="shape shape-2"></div>
@@ -28,23 +19,24 @@
     </div>
 
     <div class="app-container">
-        <!-- Header -->
         <header class="app-header">
             <div class="header-logo">
                 <i data-lucide="building-2"></i>
                 <h1><span class="gradient-text">DEPUTATION</span> VACANCIES</h1>
             </div>
             <div class="header-actions">
+                <button id="favBtn" class="icon-btn" title="My Watchlist">
+                    <i data-lucide="heart"></i>
+                    <span id="favCount" class="fav-count">0</span>
+                </button>
                 <button id="themeToggle" class="icon-btn" title="Toggle Theme">
                     <i data-lucide="moon"></i>
                 </button>
             </div>
         </header>
 
-        <!-- Main Layout -->
         <main class="main-layout">
-            
-            <!-- Filters Sidebar -->
+            <!-- Filters -->
             <aside class="filters-sidebar glass-panel">
                 <div class="filters-header">
                     <h2><i data-lucide="filter"></i> Filters</h2>
@@ -52,43 +44,43 @@
                 </div>
 
                 <div class="filter-group">
-                    <label for="searchPost">Search text</label>
+                    <label>Search</label>
                     <div class="input-icon">
                         <i data-lucide="search"></i>
-                        <input type="text" id="searchPost" placeholder="e.g. Director, Finance...">
+                        <input type="text" id="searchPost" placeholder="Post, dept, keywords...">
                     </div>
                 </div>
 
                 <div class="filter-group">
-                    <label for="filterMyPayLevel">My Pay Level</label>
+                    <label>My Pay Level</label>
                     <select id="filterMyPayLevel">
-                        <option value="">Select Level</option>
+                        <option value="">Any Level</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="filterLevel">Pay Level</label>
+                    <label>Pay Level</label>
                     <select id="filterLevel">
                         <option value="">All Levels</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="filterMinistry">Ministry</label>
+                    <label>Ministry</label>
                     <select id="filterMinistry">
                         <option value="">All Ministries</option>
                     </select>
                 </div>
-                
+
                 <div class="filter-group">
-                    <label for="filterLocation">Location</label>
+                    <label>Location</label>
                     <select id="filterLocation">
                         <option value="">All Locations</option>
                     </select>
                 </div>
 
                 <div class="filter-group">
-                    <label for="filterStatus">Status</label>
+                    <label>Status</label>
                     <select id="filterStatus">
                         <option value="">All</option>
                         <option value="Active" selected>Active</option>
@@ -97,41 +89,39 @@
                 </div>
             </aside>
 
-            <!-- Dashboard Content -->
+            <!-- Main Content -->
             <section class="dashboard-content">
-                <!-- KPI Cards -->
-                <div class="kpi-grid" id="kpiGrid">
-                    <!-- Cards will be populated by JS -->
-                </div>
+                <!-- KPIs -->
+                <div class="kpi-grid" id="kpiGrid"></div>
 
-                <!-- View Toggle & Sort -->
+                <!-- Active Filters -->
+                <div id="activeFilters" class="active-filters"></div>
+
+                <!-- Toolbar -->
                 <div class="content-toolbar">
-                    <div class="results-count" id="resultsCount">Loading...</div>
-                    <div class="toolbar-actions">
-                        <div class="view-toggles">
-                            <button id="btnTableView" class="view-btn active" title="Table View">
-                                <i data-lucide="table-2"></i>
-                            </button>
-                            <button id="btnCardView" class="view-btn" title="Card View">
-                                <i data-lucide="layout-grid"></i>
-                            </button>
-                        </div>
+                    <div class="results-count" id="resultsCount">Loading vacancies...</div>
+                    <div class="view-toggles">
+                        <button id="btnTableView" class="view-btn active"><i data-lucide="table-2"></i></button>
+                        <button id="btnCardView" class="view-btn"><i data-lucide="layout-grid"></i></button>
                     </div>
                 </div>
 
                 <!-- Data Container -->
                 <div id="dataContainer" class="data-container view-table">
-                    <!-- Content will be populated by JS -->
-                    <div class="loading-state">
-                        <i data-lucide="loader-2" class="spin"></i>
-                        <p>Loading Deputation Data...</p>
-                    </div>
+                    <!-- Populated by JS -->
                 </div>
             </section>
         </main>
     </div>
 
-    <!-- App Logic -->
+    <!-- DETAIL MODAL -->
+    <div id="modal" class="modal">
+        <div class="modal-content glass-panel">
+            <button id="closeModal" class="modal-close"><i data-lucide="x"></i></button>
+            <div id="modalBody"></div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
