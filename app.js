@@ -79,9 +79,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function initDashboard() {
         populateFilterOptions();
 
-        // Initial Filter applying default (Status: Active)
-        applyFilters();
-
         // Populate My Pay Level (18 to 1)
         for (let i = 18; i >= 1; i--) {
             const option = document.createElement('option');
@@ -89,6 +86,9 @@ document.addEventListener('DOMContentLoaded', () => {
             option.textContent = `Level ${i}`;
             filterMyPayLevel.appendChild(option);
         }
+
+        // Initial Filter applying default (Status: Active)
+        applyFilters();
 
         // Attach listeners
         searchPost.addEventListener('input', applyFilters);
@@ -149,16 +149,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sMinistry && item.Ministry !== sMinistry) match = false;
             if (sLocation && item.Location_State !== sLocation) match = false;
             if (sStatus && item.Status !== sStatus) match = false;
+
+            // Filter by My Pay Level
+            if (sMyPayLevel) {
+                // To display it MUST match Req_Level1 or Req_Level2
+                if (item.Req_Level1 != sMyPayLevel && item.Req_Level2 != sMyPayLevel) {
+                    match = false;
+                }
+            }
+
             return match;
         });
-
-        if (sMyPayLevel) {
-            filteredData.sort((a, b) => {
-                const aMatch = (a.Req_Level1 == sMyPayLevel || a.Req_Level2 == sMyPayLevel) ? 1 : 0;
-                const bMatch = (b.Req_Level1 == sMyPayLevel || b.Req_Level2 == sMyPayLevel) ? 1 : 0;
-                return bMatch - aMatch;
-            });
-        }
 
         renderDashboard();
     }
