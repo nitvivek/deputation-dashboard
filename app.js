@@ -9,8 +9,28 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterLevel = document.getElementById('filterLevel');
     const filterMinistry = document.getElementById('filterMinistry');
     const filterLocation = document.getElementById('filterLocation');
+    const filterStatus = document.getElementById('filterStatus');
+    const themeToggle = document.getElementById('themeToggle');
 
     let rawData = [];
+
+    // Theme Toggle
+    const currentTheme = localStorage.getItem('theme') || 'dark';
+    document.documentElement.setAttribute('data-theme', currentTheme);
+    updateThemeIcon();
+
+    function updateThemeIcon() {
+        const icon = document.documentElement.getAttribute('data-theme') === 'dark' ? 'sun' : 'moon';
+        themeToggle.innerHTML = `<i data-lucide="${icon}"></i>`;
+        lucide.createIcons();
+    }
+
+    themeToggle.addEventListener('click', () => {
+        const newTheme = document.documentElement.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        document.documentElement.setAttribute('data-theme', newTheme);
+        localStorage.setItem('theme', newTheme);
+        updateThemeIcon();
+    });
 
     // Loading
     dataContainer.innerHTML = `
@@ -31,11 +51,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
             populateFilters();
             renderDashboard();
+        },
+        error: function() {
+            dataContainer.innerHTML = `<div style="padding:60px;text-align:center;color:#f43f5e">Failed to load data. Please refresh.</div>`;
         }
     });
 
     function populateFilters() {
-        // Pay Level
+        // My Pay Level
         for (let i = 18; i >= 1; i--) {
             const opt = document.createElement('option');
             opt.value = i;
@@ -43,28 +66,14 @@ document.addEventListener('DOMContentLoaded', () => {
             filterMyPayLevel.appendChild(opt);
         }
 
-        // Other filters
+        // Other dropdowns
         const levels = [...new Set(rawData.map(item => item.Level_Text).filter(Boolean))].sort();
         const ministries = [...new Set(rawData.map(item => item.Ministry).filter(Boolean))].sort();
         const locations = [...new Set(rawData.map(item => item.Location_State).filter(Boolean))].sort();
 
-        levels.forEach(l => {
-            const opt = document.createElement('option');
-            opt.value = l; opt.textContent = l;
-            filterLevel.appendChild(opt);
-        });
-
-        ministries.forEach(m => {
-            const opt = document.createElement('option');
-            opt.value = m; opt.textContent = m;
-            filterMinistry.appendChild(opt);
-        });
-
-        locations.forEach(l => {
-            const opt = document.createElement('option');
-            opt.value = l; opt.textContent = l;
-            filterLocation.appendChild(opt);
-        });
+        levels.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = l; filterLevel.appendChild(o); });
+        ministries.forEach(m => { const o = document.createElement('option'); o.value = m; o.textContent = m; filterMinistry.appendChild(o); });
+        locations.forEach(l => { const o = document.createElement('option'); o.value = l; o.textContent = l; filterLocation.appendChild(o); });
     }
 
     function renderDashboard() {
@@ -107,6 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         html += `</tbody></table></div>`;
+
         dataContainer.innerHTML = html;
         resultsCount.textContent = `${rawData.length} vacancies`;
         lucide.createIcons();
