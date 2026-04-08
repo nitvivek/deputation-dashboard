@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const filterMinistry = document.getElementById('filterMinistry');
     const filterLocation = document.getElementById('filterLocation');
     const filterStatus = document.getElementById('filterStatus');
+    const filterMyPayLevel = document.getElementById('filterMyPayLevel');
     const clearFiltersBtn = document.getElementById('clearFiltersBtn');
 
     const kpiGrid = document.getElementById('kpiGrid');
@@ -81,8 +82,17 @@ document.addEventListener('DOMContentLoaded', () => {
         // Initial Filter applying default (Status: Active)
         applyFilters();
 
+        // Populate My Pay Level (18 to 1)
+        for (let i = 18; i >= 1; i--) {
+            const option = document.createElement('option');
+            option.value = i;
+            option.textContent = `Level ${i}`;
+            filterMyPayLevel.appendChild(option);
+        }
+
         // Attach listeners
         searchPost.addEventListener('input', applyFilters);
+        filterMyPayLevel.addEventListener('change', applyFilters);
         filterLevel.addEventListener('change', applyFilters);
         filterMinistry.addEventListener('change', applyFilters);
         filterLocation.addEventListener('change', applyFilters);
@@ -94,6 +104,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterMinistry.value = '';
             filterLocation.value = '';
             filterStatus.value = '';
+            filterMyPayLevel.value = '';
             applyFilters();
         });
     }
@@ -129,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const sMinistry = filterMinistry.value;
         const sLocation = filterLocation.value;
         const sStatus = filterStatus.value;
+        const sMyPayLevel = filterMyPayLevel.value;
 
         filteredData = rawData.filter(item => {
             let match = true;
@@ -139,6 +151,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (sStatus && item.Status !== sStatus) match = false;
             return match;
         });
+
+        if (sMyPayLevel) {
+            filteredData.sort((a, b) => {
+                const aMatch = (a.Req_Level1 == sMyPayLevel || a.Req_Level2 == sMyPayLevel) ? 1 : 0;
+                const bMatch = (b.Req_Level1 == sMyPayLevel || b.Req_Level2 == sMyPayLevel) ? 1 : 0;
+                return bMatch - aMatch;
+            });
+        }
 
         renderDashboard();
     }
