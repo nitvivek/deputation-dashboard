@@ -29,7 +29,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let sortDirection = 'asc';
     let favorites = JSON.parse(localStorage.getItem('deputationFavorites') || '[]');
 
-    // Show loading immediately
     showLoading();
 
     // Theme
@@ -62,26 +61,18 @@ document.addEventListener('DOMContentLoaded', () => {
         renderMainContent();
     }
 
-    // ==================== LOAD DATA ====================
+    // Load CSV
     Papa.parse('https://docs.google.com/spreadsheets/d/e/2PACX-1vRtNK339wNsCATEu20kc0XPlFjHKKahfxZqunH3Gll2mA-9witdSGrKB3-1jmeauT5gbwkNg5Y8rCKk/pub?output=csv', {
         download: true,
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-            rawData = results.data.filter(row => row.Vacancy_ID); // remove empty rows
+            rawData = results.data.filter(row => row.Vacancy_ID);
             console.log('✅ Data loaded:', rawData.length, 'vacancies');
             initDashboard();
         },
-        error: (err) => {
-            console.error('PapaParse Error:', err);
-            dataContainer.innerHTML = `
-                <div style="padding:3rem;text-align:center;color:#f43f5e">
-                    <i data-lucide="alert-circle" style="width:48px;height:48px"></i>
-                    <h3>Failed to load vacancies</h3>
-                    <p>Try opening with Live Server (right-click → Open with Live Server)</p>
-                    <small>Or check your internet connection.</small>
-                </div>`;
-            lucide.createIcons();
+        error: () => {
+            dataContainer.innerHTML = `<div style="padding:3rem;text-align:center;color:#f43f5e">Failed to load data. Try refreshing.</div>`;
         }
     });
 
@@ -95,17 +86,12 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initDashboard() {
-        if (rawData.length === 0) {
-            dataContainer.innerHTML = `<div style="padding:3rem;text-align:center">No data found in spreadsheet.</div>`;
-            return;
-        }
         populateFilters();
         applyFilters();
         attachListeners();
     }
 
     function populateFilters() {
-        // ... (same as before - unchanged)
         const levels = [...new Set(rawData.map(i => i.Level_Text).filter(Boolean))].sort();
         const ministries = [...new Set(rawData.map(i => i.Ministry).filter(Boolean))].sort();
         const locations = [...new Set(rawData.map(i => i.Location_State).filter(Boolean))].sort();
@@ -144,11 +130,100 @@ document.addEventListener('DOMContentLoaded', () => {
         applyFilters();
     }
 
-    // Rest of the functions (renderActiveFilters, applyFilters, renderKPIs, renderMainContent, etc.) remain exactly the same as the previous version I gave you.
+    function applyFilters() {
+        const s = searchPost.value.toLowerCase().trim();
+        const myLevel = filterMyPayLevel.value;
+        const level = filterLevel.value;
+        const ministry = filterMinistry.value;
+        const location = filterLocation.value;
+        const status = filterStatus.value;
 
-    // (To keep this message short, I only changed the loading + error part. 
-    //  Just replace the entire file with the full version I sent earlier + the showLoading() and improved Papa.parse above.)
+        filteredData = rawData.filter(item => {
+            let match = true;
+            if (s) {
+                const text = `${item.Post_Name} ${item.Department} ${item.Ministry} ${item.Tags_Keywords || ''}`.toLowerCase();
+                if (!text.includes(s)) match = false;
+            }
+            if (level && item.Level_Text !== level) match = false;
+            if (ministry && item.Ministry !== ministry) match = false;
+            if (location && item.Location_State !== location) match = false;
+            if (status && item.Status !== status) match = false;
 
-    // Paste the full previous app.js and only replace the Papa.parse section and add the showLoading() function.
-    // If you want me to send the **complete final app.js** again, just say "send full app.js again".
+            if (myLevel) {
+                const req1 = String(item.Req_Level1 || '');
+                const req2 = String(item.Req_Level2 || '');
+                if (!req1.includes(myLevel) && !req2.includes(myLevel)) match = false;
+            }
+            return match;
+        });
+
+        renderDashboard();
+    }
+
+    function renderDashboard() {
+        renderKPIs();
+        renderMainContent();
+        resultsCount.textContent = `${filteredData.length} vacancies`;
+        updateFavCount();
+        renderActiveFilters();
+    }
+
+    function renderKPIs() {
+        const total = filteredData.length;
+        const closingSoon = filteredData.filter(d => parseInt(d.Days_Left) > 0 && parseInt(d.Days_Left) <= 15).length;
+        const distinct = new Set(filteredData.map(d => d.Post_Name)).size;
+
+        kpiGrid.innerHTML = `
+            <div class="kpi-card"><span class="kpi-title">Total Vacancies</span><span class="kpi-value">${total}</span></div>
+            <div class="kpi-card"><span class="kpi-title">Distinct Roles</span><span class="kpi-value">${distinct}</span></div>
+            <div class="kpi-card"><span class="kpi-title">Closing Soon</span><span class="kpi-value" style="color:var(--warning-color)">${closingSoon}</span></div>
+            <div class="kpi-card"><span class="kpi-title">Active</span><span class="kpi-value">${filteredData.filter(d=>d.Status==='Active').length}</span></div>
+        `;
+    }
+
+    function renderActiveFilters() {
+        // (kept minimal for now - you can expand later)
+        activeFiltersContainer.innerHTML = '';
+    }
+
+    function renderMainContent() {
+        let html = `<div class="table-wrapper"><table class="data-table"><thead><tr>
+            <th>Post</th><th>Level</th><th>Ministry</th><th>Location</th><th>Days Left</th><th>Status</th>
+        </tr></thead><tbody>`;
+
+        filteredData.forEach(item => {
+            const isClosing = parseInt(item.Days_Left) <= 15 && parseInt(item.Days_Left) > 0;
+            html += `
+                <tr onclick="showDetail('${item.Vacancy_ID}')">
+                    <td><strong>${item.Post_Name}</strong></td>
+                    <td><span class="badge badge-level">${item.Level_Text}</span></td>
+                    <td>${item.Ministry}</td>
+                    <td>${item.Location_City}, ${item.Location_State}</td>
+                    <td><span class="${isClosing ? 'days-left closing' : 'days-left'}">${item.Days_Left} days</span></td>
+                    <td><span class="badge badge-active">${item.Status}</span></td>
+                </tr>`;
+        });
+
+        html += `</tbody></table></div>`;
+        dataContainer.innerHTML = html;
+        lucide.createIcons();
+    }
+
+    window.showDetail = function(id) {
+        const item = rawData.find(r => r.Vacancy_ID === id);
+        if (!item) return;
+        modalBody.innerHTML = `<div style="padding:2rem"><h2>${item.Post_Name}</h2><p>More details coming soon...</p></div>`;
+        modal.style.display = 'flex';
+    };
+
+    function updateFavCount() {
+        favCount.textContent = favorites.length;
+    }
+
+    function showFavorites() {
+        alert("Watchlist feature coming in next update!");
+    }
+
+    // Make global
+    window.showDetail = window.showDetail;
 });
