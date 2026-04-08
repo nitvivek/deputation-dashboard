@@ -24,12 +24,13 @@
                 <i data-lucide="building-2"></i>
                 <h1><span class="gradient-text">DEPUTATION</span> VACANCIES</h1>
             </div>
+
             <div class="header-actions">
-                <button id="favBtn" class="icon-btn" title="My Watchlist">
+                <button id="favBtn" class="icon-btn" title="My Watchlist" type="button">
                     <i data-lucide="heart"></i>
                     <span id="favCount" class="fav-count">0</span>
                 </button>
-                <button id="themeToggle" class="icon-btn" title="Toggle Theme">
+                <button id="themeToggle" class="icon-btn" title="Toggle Theme" type="button">
                     <i data-lucide="moon"></i>
                 </button>
             </div>
@@ -39,11 +40,11 @@
             <aside class="filters-sidebar glass-panel">
                 <div class="filters-header">
                     <h2><i data-lucide="filter"></i> Filters</h2>
-                    <button id="clearFiltersBtn" class="text-btn">Clear All</button>
+                    <button id="clearFiltersBtn" class="text-btn" type="button">Clear All</button>
                 </div>
 
                 <div class="filter-group">
-                    <label>Search</label>
+                    <label for="searchPost">Search</label>
                     <div class="input-icon">
                         <i data-lucide="search"></i>
                         <input type="text" id="searchPost" placeholder="Post, dept, keywords...">
@@ -51,27 +52,35 @@
                 </div>
 
                 <div class="filter-group">
-                    <label>My Pay Level</label>
-                    <select id="filterMyPayLevel"><option value="">Any Level</option></select>
+                    <label for="filterMyPayLevel">My Pay Level</label>
+                    <select id="filterMyPayLevel">
+                        <option value="">Any Level</option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
-                    <label>Pay Level</label>
-                    <select id="filterLevel"><option value="">All Levels</option></select>
+                    <label for="filterLevel">Pay Level</label>
+                    <select id="filterLevel">
+                        <option value="">All Levels</option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
-                    <label>Ministry</label>
-                    <select id="filterMinistry"><option value="">All Ministries</option></select>
+                    <label for="filterMinistry">Ministry</label>
+                    <select id="filterMinistry">
+                        <option value="">All Ministries</option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
-                    <label>Location</label>
-                    <select id="filterLocation"><option value="">All Locations</option></select>
+                    <label for="filterLocation">Location</label>
+                    <select id="filterLocation">
+                        <option value="">All Locations</option>
+                    </select>
                 </div>
 
                 <div class="filter-group">
-                    <label>Status</label>
+                    <label for="filterStatus">Status</label>
                     <select id="filterStatus">
                         <option value="">All</option>
                         <option value="Active" selected>Active</option>
@@ -87,8 +96,12 @@
                 <div class="content-toolbar">
                     <div class="results-count" id="resultsCount">Loading vacancies...</div>
                     <div class="view-toggles">
-                        <button id="btnTableView" class="view-btn active"><i data-lucide="table-2"></i></button>
-                        <button id="btnCardView" class="view-btn"><i data-lucide="layout-grid"></i></button>
+                        <button id="btnTableView" class="view-btn active" type="button">
+                            <i data-lucide="table-2"></i>
+                        </button>
+                        <button id="btnCardView" class="view-btn" type="button">
+                            <i data-lucide="layout-grid"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -97,10 +110,11 @@
         </main>
     </div>
 
-    <!-- Modal -->
     <div id="modal" class="modal">
         <div class="modal-content glass-panel">
-            <button id="closeModal" class="modal-close"><i data-lucide="x"></i></button>
+            <button id="closeModal" class="modal-close" type="button">
+                <i data-lucide="x"></i>
+            </button>
             <div id="modalBody"></div>
         </div>
     </div>
