@@ -125,49 +125,60 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 
-    function getFilteredData() {
-        const search = searchPost.value.trim().toLowerCase();
-        const myPayLevel = filterMyPayLevel.value;
-        const level = filterLevel.value;
-        const ministry = filterMinistry.value;
-        const location = filterLocation.value;
-        const status = filterStatus.value;
+   function getFilteredData() {
+    const search = searchPost.value.trim().toLowerCase();
+    const myPayLevel = filterMyPayLevel.value;
+    const level = filterLevel.value;
+    const ministry = filterMinistry.value;
+    const location = filterLocation.value;
+    const status = filterStatus.value;
 
-        return rawData.filter(item => {
-            const itemStatus = safe(item.Status);
-            const itemLevel = safe(item.Level_Text);
-            const itemMinistry = safe(item.Ministry);
-            const itemLocation = formatLocation(item);
-            const itemDaysLeft = parseInt(item.Days_Left, 10);
+    return rawData.filter(item => {
+        const itemStatus = safe(item.Status);
+        const itemMinistry = safe(item.Ministry);
+        const itemLocation = formatLocation(item);
 
-            const searchableText = [
-                item.Post_Name,
-                item.Department_Organisation,
-                item.Ministry,
-                item.Location_City,
-                item.Location_State,
-                item.Level_Text,
-                item.Keywords,
-                item.Essential_Qualification,
-                item.Desirable_Qualification
-            ].map(safe).join(' ').toLowerCase();
+        // Search filter
+        const searchableText = [
+            item.Post_Name,
+            item.Department,
+            item.Ministry,
+            item.Location_City,
+            item.Location_State,
+            item.Level_Text,
+            item.Tags_Keywords,
+            item.Essential_Qualification
+        ].map(safe).join(' ').toLowerCase();
 
-            if (search && !searchableText.includes(search)) return false;
-            if (level && itemLevel !== level) return false;
-            if (ministry && itemMinistry !== ministry) return false;
-            if (location && itemLocation !== location) return false;
-            if (status && itemStatus !== status) return false;
+        if (search && !searchableText.includes(search)) return false;
 
-            if (myPayLevel) {
-                const numericLevel = extractLevelNumber(itemLevel);
-                if (numericLevel !== null && numericLevel > Number(myPayLevel)) return false;
-            }
+        // Pay Level filter
+        if (level && safe(item.Level_Text) !== level) return false;
 
-            if (!Number.isNaN(itemDaysLeft) && status === 'Active' && itemDaysLeft < 0) return false;
+        // Ministry filter
+        if (ministry && itemMinistry !== ministry) return false;
 
-            return true;
-        });
-    }
+        // Location filter
+        if (location && itemLocation !== location) return false;
+
+        // Status filter
+        if (status && itemStatus !== status) return false;
+
+        // === MY PAY LEVEL FILTER (This was the buggy part) ===
+        if (myPayLevel) {
+            const userLevel = Number(myPayLevel);
+            const req1 = extractLevelNumber(safe(item.Req_Level1));
+            const req2 = extractLevelNumber(safe(item.Req_Level2));
+
+            const eligible = (req1 !== null && req1 <= userLevel) || 
+                            (req2 !== null && req2 <= userLevel);
+
+            if (!eligible) return false;
+        }
+
+        return true;
+    });
+}
 
     function renderKPIs(filteredData) {
         const active = filteredData.filter(d => safe(d.Status) === 'Active').length;
