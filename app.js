@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
         renderActiveFilterChips();
         renderResults(filteredData);
 
-        resultsCount.textContent = `${filteredData.length} vacancy${filteredData.length === 1 ? '' : 'ies'}`;
+        resultsCount.textContent = `${filteredData.length} ${filteredData.length === 1 ? 'vacancy' : 'vacancies'}`;
         lucide.createIcons();
     }
 
