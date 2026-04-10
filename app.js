@@ -35,6 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
         complete(results) {
             rawData = results.data.filter(row => row.Vacancy_ID && String(row.Vacancy_ID).trim() !== '');
             console.log('✅ Loaded vacancies:', rawData.length);
+            console.log('Sample row:', rawData[0]);
 
             populateFilters();
             bindEvents();
@@ -121,64 +122,82 @@ document.addEventListener('DOMContentLoaded', () => {
         renderActiveFilterChips();
         renderResults(filteredData);
 
-        resultsCount.textContent = `${filteredData.length} ${filteredData.length === 1 ? 'vacancy' : 'vacancies'}`;
+        resultsCount.textContent = `${filteredData.length} vacanc${filteredData.length === 1 ? 'y' : 'ies'}`;
         lucide.createIcons();
     }
 
-   function getFilteredData() {
-    const search = searchPost.value.trim().toLowerCase();
-    const myPayLevel = filterMyPayLevel.value;
-    const level = filterLevel.value;
-    const ministry = filterMinistry.value;
-    const location = filterLocation.value;
-    const status = filterStatus.value;
+    function getFilteredData() {
+        const search = searchPost.value.trim().toLowerCase();
+        const myPayLevel = filterMyPayLevel.value;
+        const level = filterLevel.value;
+        const ministry = filterMinistry.value;
+        const location = filterLocation.value;
+        const status = filterStatus.value;
 
-    return rawData.filter(item => {
-        const itemStatus = safe(item.Status);
-        const itemMinistry = safe(item.Ministry);
-        const itemLocation = formatLocation(item);
+        return rawData.filter(item => {
+            const itemStatus = safe(item.Status);
+            const itemLevel = safe(item.Level_Text);
+            const itemMinistry = safe(item.Ministry);
+            const itemLocation = formatLocation(item);
+            const itemDaysLeft = parseInt(item.Days_Left, 10);
 
-        // Search filter
-        const searchableText = [
-            item.Post_Name,
-            item.Department,
-            item.Ministry,
-            item.Location_City,
-            item.Location_State,
-            item.Level_Text,
-            item.Tags_Keywords,
-            item.Essential_Qualification
-        ].map(safe).join(' ').toLowerCase();
+            const searchableText = [
+                item.Post_Name,
+                item.Department_Organisation,
+                item.Ministry,
+                item.Location_City,
+                item.Location_State,
+                item.Level_Text,
+                item.Req_Level1,
+                item.Req_Level2,
+                item.Keywords,
+                item.Essential_Qualification,
+                item.Desirable_Qualification
+            ].map(safe).join(' ').toLowerCase();
 
-        if (search && !searchableText.includes(search)) return false;
+            if (search && !searchableText.includes(search)) return false;
+            if (level && itemLevel !== level) return false;
+            if (ministry && itemMinistry !== ministry) return false;
+            if (location && itemLocation !== location) return false;
+            if (status && itemStatus !== status) return false;
 
-        // Pay Level filter
-        if (level && safe(item.Level_Text) !== level) return false;
+            // Correct My Pay Level logic:
+            // check against Req_Level1 / Req_Level2, not Level_Text
+            if (myPayLevel) {
+                const userLevel = Number(myPayLevel);
+                const req1 = parseLevelValue(item.Req_Level1);
+                const req2 = parseLevelValue(item.Req_Level2);
 
-        // Ministry filter
-        if (ministry && itemMinistry !== ministry) return false;
+                // If both columns exist, user should fall within the eligible range
+                if (req1 !== null && req2 !== null) {
+                    const minReq = Math.min(req1, req2);
+                    const maxReq = Math.max(req1, req2);
 
-        // Location filter
-        if (location && itemLocation !== location) return false;
+                    if (userLevel < minReq || userLevel > maxReq) {
+                        return false;
+                    }
+                }
+                // If only Req_Level1 exists
+                else if (req1 !== null) {
+                    if (userLevel !== req1) return false;
+                }
+                // If only Req_Level2 exists
+                else if (req2 !== null) {
+                    if (userLevel !== req2) return false;
+                }
+                // If neither exists, hide from My Pay Level filtered results
+                else {
+                    return false;
+                }
+            }
 
-        // Status filter
-        if (status && itemStatus !== status) return false;
+            if (!Number.isNaN(itemDaysLeft) && status === 'Active' && itemDaysLeft < 0) {
+                return false;
+            }
 
-        // === MY PAY LEVEL FILTER (This was the buggy part) ===
-        if (myPayLevel) {
-            const userLevel = Number(myPayLevel);
-            const req1 = extractLevelNumber(safe(item.Req_Level1));
-            const req2 = extractLevelNumber(safe(item.Req_Level2));
-
-            const eligible = (req1 !== null && req1 <= userLevel) || 
-                            (req2 !== null && req2 <= userLevel);
-
-            if (!eligible) return false;
-        }
-
-        return true;
-    });
-}
+            return true;
+        });
+    }
 
     function renderKPIs(filteredData) {
         const active = filteredData.filter(d => safe(d.Status) === 'Active').length;
@@ -186,7 +205,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const days = parseInt(d.Days_Left, 10);
             return !Number.isNaN(days) && days > 0 && days <= 15;
         }).length;
-
         const ministries = new Set(filteredData.map(d => safe(d.Ministry)).filter(Boolean)).size;
 
         kpiGrid.innerHTML = `
@@ -247,7 +265,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <tr>
-                    <td><strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong></td>
+                    <td>
+                        <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
+                        <div style="margin-top:6px;color:var(--text-secondary);font-size:0.85rem;">
+                            Eligible From: ${escapeHtml(formatEligibility(item))}
+                        </div>
+                    </td>
                     <td>${escapeHtml(safe(item.Level_Text) || '—')}</td>
                     <td>${escapeHtml(safe(item.Ministry) || '—')}</td>
                     <td>${escapeHtml(formatLocation(item) || '—')}</td>
@@ -299,13 +322,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="detail-item"><strong>Status:</strong> ${escapeHtml(safe(item.Status) || '—')}</div>
                         <div class="detail-item"><strong>Ministry:</strong> ${escapeHtml(safe(item.Ministry) || '—')}</div>
                         <div class="detail-item"><strong>Location:</strong> ${escapeHtml(formatLocation(item) || '—')}</div>
-                    </div>
-
-                    <div class="detail-item">
-                        <strong>Days Left:</strong>
-                        <span class="days-left ${closingSoon ? 'closing' : ''}">
-                            ${Number.isNaN(daysLeft) ? '—' : `${daysLeft} days`}
-                        </span>
+                        <div class="detail-item"><strong>Eligible From:</strong> ${escapeHtml(formatEligibility(item))}</div>
+                        <div class="detail-item">
+                            <strong>Days Left:</strong>
+                            <span class="days-left ${closingSoon ? 'closing' : ''}">
+                                ${Number.isNaN(daysLeft) ? '—' : `${daysLeft} days`}
+                            </span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -338,9 +361,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return city || state || '';
     }
 
-    function extractLevelNumber(levelText) {
-        const match = safe(levelText).match(/(\d+)/);
-        return match ? Number(match[1]) : null;
+    function parseLevelValue(value) {
+        if (value == null) return null;
+        const str = String(value).trim();
+        if (!str) return null;
+
+        const match = str.match(/\d+/);
+        return match ? Number(match[0]) : null;
+    }
+
+    function formatEligibility(item) {
+        const req1 = parseLevelValue(item.Req_Level1);
+        const req2 = parseLevelValue(item.Req_Level2);
+
+        if (req1 !== null && req2 !== null) {
+            if (req1 === req2) return `Level ${req1}`;
+            const minReq = Math.min(req1, req2);
+            const maxReq = Math.max(req1, req2);
+            return `Level ${minReq} to Level ${maxReq}`;
+        }
+
+        if (req1 !== null) return `Level ${req1}`;
+        if (req2 !== null) return `Level ${req2}`;
+
+        return 'Not specified';
     }
 
     function escapeHtml(str) {
