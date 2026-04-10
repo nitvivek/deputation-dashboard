@@ -22,6 +22,16 @@ document.addEventListener('DOMContentLoaded', () => {
     let rawData = [];
     let currentView = 'table';
 
+    let sortState = {
+        key: 'Days_Left',
+        direction: 'asc'
+    };
+
+    let pagination = {
+        currentPage: 1,
+        pageSize: 10
+    };
+
     dataContainer.innerHTML = `
         <div class="empty-state">
             Loading vacancies from Google Sheet...
@@ -86,8 +96,8 @@ document.addEventListener('DOMContentLoaded', () => {
             filterLocation,
             filterStatus
         ].forEach(el => {
-            el.addEventListener('input', renderDashboard);
-            el.addEventListener('change', renderDashboard);
+            el.addEventListener('input', onFilterChange);
+            el.addEventListener('change', onFilterChange);
         });
 
         clearFiltersBtn.addEventListener('click', () => {
@@ -97,6 +107,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterMinistry.value = '';
             filterLocation.value = '';
             filterStatus.value = 'Active';
+            pagination.currentPage = 1;
             renderDashboard();
         });
 
@@ -113,16 +124,96 @@ document.addEventListener('DOMContentLoaded', () => {
             btnTableView.classList.remove('active');
             renderDashboard();
         });
+
+        activeFilters.addEventListener('click', (e) => {
+            const chip = e.target.closest('[data-remove-filter]');
+            if (!chip) return;
+
+            const filterName = chip.getAttribute('data-remove-filter');
+
+            if (filterName === 'search') searchPost.value = '';
+            if (filterName === 'myPayLevel') filterMyPayLevel.value = '';
+            if (filterName === 'level') filterLevel.value = '';
+            if (filterName === 'ministry') filterMinistry.value = '';
+            if (filterName === 'location') filterLocation.value = '';
+            if (filterName === 'status') filterStatus.value = '';
+
+            pagination.currentPage = 1;
+            renderDashboard();
+        });
+
+        dataContainer.addEventListener('click', (e) => {
+            const sortBtn = e.target.closest('[data-sort]');
+            if (sortBtn) {
+                const key = sortBtn.getAttribute('data-sort');
+                toggleSort(key);
+                return;
+            }
+
+            const pageBtn = e.target.closest('[data-page]');
+            if (pageBtn) {
+                const page = Number(pageBtn.getAttribute('data-page'));
+                if (!Number.isNaN(page)) {
+                    pagination.currentPage = page;
+                    renderDashboard(false);
+                }
+                return;
+            }
+
+            const pageNavBtn = e.target.closest('[data-page-nav]');
+            if (pageNavBtn) {
+                const action = pageNavBtn.getAttribute('data-page-nav');
+                const totalPages = Number(pageNavBtn.getAttribute('data-total-pages')) || 1;
+
+                if (action === 'prev' && pagination.currentPage > 1) {
+                    pagination.currentPage--;
+                } else if (action === 'next' && pagination.currentPage < totalPages) {
+                    pagination.currentPage++;
+                }
+                renderDashboard(false);
+            }
+        });
     }
 
-    function renderDashboard() {
-        const filteredData = getFilteredData();
+    function onFilterChange() {
+        pagination.currentPage = 1;
+        renderDashboard();
+    }
+
+    function toggleSort(key) {
+        if (sortState.key === key) {
+            sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
+        } else {
+            sortState.key = key;
+            sortState.direction = key === 'Days_Left' ? 'asc' : 'asc';
+        }
+        renderDashboard(false);
+    }
+
+    function renderDashboard(resetPageIfNeeded = true) {
+        let filteredData = getFilteredData();
+        filteredData = sortData(filteredData);
+
+        const totalPages = Math.max(1, Math.ceil(filteredData.length / pagination.pageSize));
+        if (resetPageIfNeeded) {
+            pagination.currentPage = Math.min(pagination.currentPage, totalPages);
+        } else if (pagination.currentPage > totalPages) {
+            pagination.currentPage = totalPages;
+        }
+
+        const pagedData = paginateData(filteredData);
 
         renderKPIs(filteredData);
         renderActiveFilterChips();
-        renderResults(filteredData);
+        renderResults(pagedData, filteredData.length, totalPages);
 
-        resultsCount.textContent = `${filteredData.length} vacanc${filteredData.length === 1 ? 'y' : 'ies'}`;
+        const start = filteredData.length === 0 ? 0 : ((pagination.currentPage - 1) * pagination.pageSize) + 1;
+        const end = Math.min(pagination.currentPage * pagination.pageSize, filteredData.length);
+
+        resultsCount.textContent = filteredData.length
+            ? `${start}-${end} of ${filteredData.length} vacancies`
+            : '0 vacancies';
+
         lucide.createIcons();
     }
 
@@ -162,31 +253,22 @@ document.addEventListener('DOMContentLoaded', () => {
             if (status && itemStatus !== status) return false;
 
             // Correct My Pay Level logic:
-            // check against Req_Level1 / Req_Level2, not Level_Text
+            // Checks eligibility using Req_Level1 / Req_Level2
             if (myPayLevel) {
                 const userLevel = Number(myPayLevel);
                 const req1 = parseLevelValue(item.Req_Level1);
                 const req2 = parseLevelValue(item.Req_Level2);
 
-                // If both columns exist, user should fall within the eligible range
+                // Exact-match eligibility across up to two feeder levels
                 if (req1 !== null && req2 !== null) {
-                    const minReq = Math.min(req1, req2);
-                    const maxReq = Math.max(req1, req2);
-
-                    if (userLevel < minReq || userLevel > maxReq) {
+                    if (userLevel !== req1 && userLevel !== req2) {
                         return false;
                     }
-                }
-                // If only Req_Level1 exists
-                else if (req1 !== null) {
+                } else if (req1 !== null) {
                     if (userLevel !== req1) return false;
-                }
-                // If only Req_Level2 exists
-                else if (req2 !== null) {
+                } else if (req2 !== null) {
                     if (userLevel !== req2) return false;
-                }
-                // If neither exists, hide from My Pay Level filtered results
-                else {
+                } else {
                     return false;
                 }
             }
@@ -197,6 +279,65 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return true;
         });
+    }
+
+    function sortData(data) {
+        const direction = sortState.direction === 'asc' ? 1 : -1;
+        const key = sortState.key;
+
+        const sorted = [...data].sort((a, b) => {
+            let aVal;
+            let bVal;
+
+            switch (key) {
+                case 'Post_Name':
+                    aVal = safe(a.Post_Name).toLowerCase();
+                    bVal = safe(b.Post_Name).toLowerCase();
+                    break;
+                case 'Level_Text':
+                    aVal = parseLevelValue(a.Level_Text);
+                    bVal = parseLevelValue(b.Level_Text);
+                    break;
+                case 'Eligibility':
+                    aVal = getEligibilitySortValue(a);
+                    bVal = getEligibilitySortValue(b);
+                    break;
+                case 'Ministry':
+                    aVal = safe(a.Ministry).toLowerCase();
+                    bVal = safe(b.Ministry).toLowerCase();
+                    break;
+                case 'Location':
+                    aVal = formatLocation(a).toLowerCase();
+                    bVal = formatLocation(b).toLowerCase();
+                    break;
+                case 'Days_Left':
+                    aVal = parseNumericSafe(a.Days_Left, Number.MAX_SAFE_INTEGER);
+                    bVal = parseNumericSafe(b.Days_Left, Number.MAX_SAFE_INTEGER);
+                    break;
+                case 'Status':
+                    aVal = safe(a.Status).toLowerCase();
+                    bVal = safe(b.Status).toLowerCase();
+                    break;
+                default:
+                    aVal = safe(a[key]).toLowerCase();
+                    bVal = safe(b[key]).toLowerCase();
+            }
+
+            if (aVal === null || aVal === undefined) aVal = '';
+            if (bVal === null || bVal === undefined) bVal = '';
+
+            if (aVal < bVal) return -1 * direction;
+            if (aVal > bVal) return 1 * direction;
+            return 0;
+        });
+
+        return sorted;
+    }
+
+    function paginateData(data) {
+        const start = (pagination.currentPage - 1) * pagination.pageSize;
+        const end = start + pagination.pageSize;
+        return data.slice(start, end);
     }
 
     function renderKPIs(filteredData) {
@@ -230,18 +371,39 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderActiveFilterChips() {
         const chips = [];
 
-        if (searchPost.value.trim()) chips.push(`Search: ${escapeHtml(searchPost.value.trim())}`);
-        if (filterMyPayLevel.value) chips.push(`My Pay Level: Level ${filterMyPayLevel.value}`);
-        if (filterLevel.value) chips.push(`Pay Level: ${escapeHtml(filterLevel.value)}`);
-        if (filterMinistry.value) chips.push(`Ministry: ${escapeHtml(filterMinistry.value)}`);
-        if (filterLocation.value) chips.push(`Location: ${escapeHtml(filterLocation.value)}`);
-        if (filterStatus.value) chips.push(`Status: ${escapeHtml(filterStatus.value)}`);
+        if (searchPost.value.trim()) {
+            chips.push(makeChip('search', `Search: ${escapeHtml(searchPost.value.trim())}`));
+        }
+        if (filterMyPayLevel.value) {
+            chips.push(makeChip('myPayLevel', `My Pay Level: Level ${filterMyPayLevel.value}`));
+        }
+        if (filterLevel.value) {
+            chips.push(makeChip('level', `Pay Level: ${escapeHtml(filterLevel.value)}`));
+        }
+        if (filterMinistry.value) {
+            chips.push(makeChip('ministry', `Ministry: ${escapeHtml(filterMinistry.value)}`));
+        }
+        if (filterLocation.value) {
+            chips.push(makeChip('location', `Location: ${escapeHtml(filterLocation.value)}`));
+        }
+        if (filterStatus.value) {
+            chips.push(makeChip('status', `Status: ${escapeHtml(filterStatus.value)}`));
+        }
 
-        activeFilters.innerHTML = chips.map(chip => `<div class="filter-chip">${chip}</div>`).join('');
+        activeFilters.innerHTML = chips.join('');
     }
 
-    function renderResults(data) {
-        if (!data.length) {
+    function makeChip(filterName, label) {
+        return `
+            <button type="button" class="filter-chip removable-chip" data-remove-filter="${filterName}">
+                <span>${label}</span>
+                <span class="chip-x">×</span>
+            </button>
+        `;
+    }
+
+    function renderResults(data, totalCount, totalPages) {
+        if (!totalCount) {
             dataContainer.className = `data-container view-${currentView}`;
             dataContainer.innerHTML = `
                 <div class="empty-state">
@@ -255,6 +417,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dataContainer.innerHTML = `
             ${renderTable(data)}
             ${renderCards(data)}
+            ${renderPagination(totalPages)}
         `;
     }
 
@@ -268,10 +431,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td>
                         <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
                         <div style="margin-top:6px;color:var(--text-secondary);font-size:0.85rem;">
-                            Eligible From: ${escapeHtml(formatEligibility(item))}
+                            ${escapeHtml(safe(item.Department_Organisation) || '')}
                         </div>
                     </td>
                     <td>${escapeHtml(safe(item.Level_Text) || '—')}</td>
+                    <td>${escapeHtml(formatEligibility(item))}</td>
                     <td>${escapeHtml(safe(item.Ministry) || '—')}</td>
                     <td>${escapeHtml(formatLocation(item) || '—')}</td>
                     <td class="days-left ${closingSoon ? 'closing' : ''}">
@@ -291,17 +455,32 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table class="data-table">
                     <thead>
                         <tr>
-                            <th>Post Name</th>
-                            <th>Level</th>
-                            <th>Ministry</th>
-                            <th>Location</th>
-                            <th>Days Left</th>
-                            <th>Status</th>
+                            ${renderSortableHeader('Post Name', 'Post_Name')}
+                            ${renderSortableHeader('Level', 'Level_Text')}
+                            ${renderSortableHeader('Eligibility', 'Eligibility')}
+                            ${renderSortableHeader('Ministry', 'Ministry')}
+                            ${renderSortableHeader('Location', 'Location')}
+                            ${renderSortableHeader('Days Left', 'Days_Left')}
+                            ${renderSortableHeader('Status', 'Status')}
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
                 </table>
             </div>
+        `;
+    }
+
+    function renderSortableHeader(label, key) {
+        const active = sortState.key === key;
+        const dir = sortState.direction === 'asc' ? '↑' : '↓';
+
+        return `
+            <th>
+                <button type="button" class="sort-btn ${active ? 'active' : ''}" data-sort="${key}">
+                    <span>${label}</span>
+                    <span class="sort-indicator">${active ? dir : '↕'}</span>
+                </button>
+            </th>
         `;
     }
 
@@ -319,10 +498,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     <div class="job-details">
                         <div class="detail-item"><strong>Level:</strong> ${escapeHtml(safe(item.Level_Text) || '—')}</div>
-                        <div class="detail-item"><strong>Status:</strong> ${escapeHtml(safe(item.Status) || '—')}</div>
+                        <div class="detail-item"><strong>Eligibility:</strong> ${escapeHtml(formatEligibility(item))}</div>
                         <div class="detail-item"><strong>Ministry:</strong> ${escapeHtml(safe(item.Ministry) || '—')}</div>
                         <div class="detail-item"><strong>Location:</strong> ${escapeHtml(formatLocation(item) || '—')}</div>
-                        <div class="detail-item"><strong>Eligible From:</strong> ${escapeHtml(formatEligibility(item))}</div>
+                        <div class="detail-item"><strong>Status:</strong> ${escapeHtml(safe(item.Status) || '—')}</div>
                         <div class="detail-item">
                             <strong>Days Left:</strong>
                             <span class="days-left ${closingSoon ? 'closing' : ''}">
@@ -335,6 +514,49 @@ document.addEventListener('DOMContentLoaded', () => {
         }).join('');
 
         return `<div class="cards-grid">${cards}</div>`;
+    }
+
+    function renderPagination(totalPages) {
+        if (totalPages <= 1) return '';
+
+        const pages = [];
+        const current = pagination.currentPage;
+
+        for (let i = 1; i <= totalPages; i++) {
+            pages.push(`
+                <button type="button" class="page-btn ${i === current ? 'active' : ''}" data-page="${i}">
+                    ${i}
+                </button>
+            `);
+        }
+
+        return `
+            <div class="pagination-bar">
+                <button
+                    type="button"
+                    class="page-nav-btn"
+                    data-page-nav="prev"
+                    data-total-pages="${totalPages}"
+                    ${current === 1 ? 'disabled' : ''}
+                >
+                    Prev
+                </button>
+
+                <div class="page-numbers">
+                    ${pages.join('')}
+                </div>
+
+                <button
+                    type="button"
+                    class="page-nav-btn"
+                    data-page-nav="next"
+                    data-total-pages="${totalPages}"
+                    ${current === totalPages ? 'disabled' : ''}
+                >
+                    Next
+                </button>
+            </div>
+        `;
     }
 
     function addOptions(selectEl, values) {
@@ -370,21 +592,34 @@ document.addEventListener('DOMContentLoaded', () => {
         return match ? Number(match[0]) : null;
     }
 
+    function parseNumericSafe(value, fallback = 0) {
+        const num = Number.parseInt(value, 10);
+        return Number.isNaN(num) ? fallback : num;
+    }
+
     function formatEligibility(item) {
         const req1 = parseLevelValue(item.Req_Level1);
         const req2 = parseLevelValue(item.Req_Level2);
 
         if (req1 !== null && req2 !== null) {
             if (req1 === req2) return `Level ${req1}`;
-            const minReq = Math.min(req1, req2);
-            const maxReq = Math.max(req1, req2);
-            return `Level ${minReq} to Level ${maxReq}`;
+            return `Level ${req1} or Level ${req2}`;
         }
 
         if (req1 !== null) return `Level ${req1}`;
         if (req2 !== null) return `Level ${req2}`;
 
         return 'Not specified';
+    }
+
+    function getEligibilitySortValue(item) {
+        const req1 = parseLevelValue(item.Req_Level1);
+        const req2 = parseLevelValue(item.Req_Level2);
+
+        if (req1 !== null && req2 !== null) return Math.min(req1, req2);
+        if (req1 !== null) return req1;
+        if (req2 !== null) return req2;
+        return Number.MAX_SAFE_INTEGER;
     }
 
     function escapeHtml(str) {
