@@ -43,7 +43,10 @@ document.addEventListener('DOMContentLoaded', () => {
         header: true,
         skipEmptyLines: true,
         complete(results) {
-            rawData = results.data.filter(row => row.Vacancy_ID && String(row.Vacancy_ID).trim() !== '');
+            rawData = results.data.filter(
+                row => row.Vacancy_ID && String(row.Vacancy_ID).trim() !== ''
+            );
+
             console.log('✅ Loaded vacancies:', rawData.length);
             console.log('Sample row:', rawData[0]);
 
@@ -115,17 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
             currentView = 'table';
             btnTableView.classList.add('active');
             btnCardView.classList.remove('active');
-            renderDashboard();
+            renderDashboard(false);
         });
 
         btnCardView.addEventListener('click', () => {
             currentView = 'card';
             btnCardView.classList.add('active');
             btnTableView.classList.remove('active');
-            renderDashboard();
+            renderDashboard(false);
         });
 
-        activeFilters.addEventListener('click', (e) => {
+        activeFilters.addEventListener('click', e => {
             const chip = e.target.closest('[data-remove-filter]');
             if (!chip) return;
 
@@ -142,7 +145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             renderDashboard();
         });
 
-        dataContainer.addEventListener('click', (e) => {
+        dataContainer.addEventListener('click', e => {
             const sortBtn = e.target.closest('[data-sort]');
             if (sortBtn) {
                 const key = sortBtn.getAttribute('data-sort');
@@ -170,6 +173,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else if (action === 'next' && pagination.currentPage < totalPages) {
                     pagination.currentPage++;
                 }
+
                 renderDashboard(false);
             }
         });
@@ -185,7 +189,7 @@ document.addEventListener('DOMContentLoaded', () => {
             sortState.direction = sortState.direction === 'asc' ? 'desc' : 'asc';
         } else {
             sortState.key = key;
-            sortState.direction = key === 'Days_Left' ? 'asc' : 'asc';
+            sortState.direction = 'asc';
         }
         renderDashboard(false);
     }
@@ -195,6 +199,7 @@ document.addEventListener('DOMContentLoaded', () => {
         filteredData = sortData(filteredData);
 
         const totalPages = Math.max(1, Math.ceil(filteredData.length / pagination.pageSize));
+
         if (resetPageIfNeeded) {
             pagination.currentPage = Math.min(pagination.currentPage, totalPages);
         } else if (pagination.currentPage > totalPages) {
@@ -207,7 +212,10 @@ document.addEventListener('DOMContentLoaded', () => {
         renderActiveFilterChips();
         renderResults(pagedData, filteredData.length, totalPages);
 
-        const start = filteredData.length === 0 ? 0 : ((pagination.currentPage - 1) * pagination.pageSize) + 1;
+        const start = filteredData.length === 0
+            ? 0
+            : ((pagination.currentPage - 1) * pagination.pageSize) + 1;
+
         const end = Math.min(pagination.currentPage * pagination.pageSize, filteredData.length);
 
         resultsCount.textContent = filteredData.length
@@ -252,31 +260,29 @@ document.addEventListener('DOMContentLoaded', () => {
             if (location && itemLocation !== location) return false;
             if (status && itemStatus !== status) return false;
 
-            // Correct My Pay Level logic:
-            // Checks eligibility using Req_Level1 / Req_Level2
-            
-            
+            // My Pay Level logic:
+            // Uses Req_Level1 / Req_Level2, and all levels in between are eligible
             if (myPayLevel) {
-    const userLevel = Number(myPayLevel);
-    const req1 = parseLevelValue(item.Req_Level1);
-    const req2 = parseLevelValue(item.Req_Level2);
+                const userLevel = Number(myPayLevel);
+                const req1 = parseLevelValue(item.Req_Level1);
+                const req2 = parseLevelValue(item.Req_Level2);
 
-    // If both required levels exist, all levels in between are eligible
-    if (req1 !== null && req2 !== null) {
-        const minReq = Math.min(req1, req2);
-        const maxReq = Math.max(req1, req2);
+                if (req1 !== null && req2 !== null) {
+                    const minReq = Math.min(req1, req2);
+                    const maxReq = Math.max(req1, req2);
 
-        if (userLevel < minReq || userLevel > maxReq) {
-            return false;
-        }
-    } else if (req1 !== null) {
-        if (userLevel !== req1) return false;
-    } else if (req2 !== null) {
-        if (userLevel !== req2) return false;
-    } else {
-        return false;
-    }
-}
+                    if (userLevel < minReq || userLevel > maxReq) {
+                        return false;
+                    }
+                } else if (req1 !== null) {
+                    if (userLevel !== req1) return false;
+                } else if (req2 !== null) {
+                    if (userLevel !== req2) return false;
+                } else {
+                    return false;
+                }
+            }
+
             if (!Number.isNaN(itemDaysLeft) && status === 'Active' && itemDaysLeft < 0) {
                 return false;
             }
@@ -289,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const direction = sortState.direction === 'asc' ? 1 : -1;
         const key = sortState.key;
 
-        const sorted = [...data].sort((a, b) => {
+        return [...data].sort((a, b) => {
             let aVal;
             let bVal;
 
@@ -298,33 +304,41 @@ document.addEventListener('DOMContentLoaded', () => {
                     aVal = safe(a.Post_Name).toLowerCase();
                     bVal = safe(b.Post_Name).toLowerCase();
                     break;
+
                 case 'Level_Text':
                     aVal = parseLevelValue(a.Level_Text);
                     bVal = parseLevelValue(b.Level_Text);
                     break;
+
                 case 'Eligibility':
                     aVal = getEligibilitySortValue(a);
                     bVal = getEligibilitySortValue(b);
                     break;
+
                 case 'Ministry':
                     aVal = safe(a.Ministry).toLowerCase();
                     bVal = safe(b.Ministry).toLowerCase();
                     break;
+
                 case 'Location':
                     aVal = formatLocation(a).toLowerCase();
                     bVal = formatLocation(b).toLowerCase();
                     break;
+
                 case 'Days_Left':
                     aVal = parseNumericSafe(a.Days_Left, Number.MAX_SAFE_INTEGER);
                     bVal = parseNumericSafe(b.Days_Left, Number.MAX_SAFE_INTEGER);
                     break;
+
                 case 'Status':
                     aVal = safe(a.Status).toLowerCase();
                     bVal = safe(b.Status).toLowerCase();
                     break;
+
                 default:
                     aVal = safe(a[key]).toLowerCase();
                     bVal = safe(b[key]).toLowerCase();
+                    break;
             }
 
             if (aVal === null || aVal === undefined) aVal = '';
@@ -334,8 +348,6 @@ document.addEventListener('DOMContentLoaded', () => {
             if (aVal > bVal) return 1 * direction;
             return 0;
         });
-
-        return sorted;
     }
 
     function paginateData(data) {
@@ -350,7 +362,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const days = parseInt(d.Days_Left, 10);
             return !Number.isNaN(days) && days > 0 && days <= 15;
         }).length;
-        const ministries = new Set(filteredData.map(d => safe(d.Ministry)).filter(Boolean)).size;
+        const ministries = new Set(
+            filteredData.map(d => safe(d.Ministry)).filter(Boolean)
+        ).size;
 
         kpiGrid.innerHTML = `
             <div class="kpi-card">
@@ -497,7 +511,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 <div class="job-card">
                     <div>
                         <div class="job-title">${escapeHtml(safe(item.Post_Name) || '—')}</div>
-                        <div class="job-org">${escapeHtml(safe(item.Department_Organisation) || safe(item.Ministry) || '—')}</div>
+                        <div class="job-org">${escapeHtml(
+                            safe(item.Department_Organisation) || safe(item.Ministry) || '—'
+                        )}</div>
                     </div>
 
                     <div class="job-details">
@@ -589,6 +605,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function parseLevelValue(value) {
         if (value == null) return null;
+
         const str = String(value).trim();
         if (!str) return null;
 
@@ -601,22 +618,23 @@ document.addEventListener('DOMContentLoaded', () => {
         return Number.isNaN(num) ? fallback : num;
     }
 
-   function formatEligibility(item) {
-    const req1 = parseLevelValue(item.Req_Level1);
-    const req2 = parseLevelValue(item.Req_Level2);
+    function formatEligibility(item) {
+        const req1 = parseLevelValue(item.Req_Level1);
+        const req2 = parseLevelValue(item.Req_Level2);
 
-    if (req1 !== null && req2 !== null) {
-        if (req1 === req2) return `Level ${req1}`;
-        const minReq = Math.min(req1, req2);
-        const maxReq = Math.max(req1, req2);
-        return `Level ${minReq} to Level ${maxReq}`;
+        if (req1 !== null && req2 !== null) {
+            if (req1 === req2) return `Level ${req1}`;
+            const minReq = Math.min(req1, req2);
+            const maxReq = Math.max(req1, req2);
+            return `Level ${minReq} to Level ${maxReq}`;
+        }
+
+        if (req1 !== null) return `Level ${req1}`;
+        if (req2 !== null) return `Level ${req2}`;
+
+        return 'Not specified';
     }
 
-    if (req1 !== null) return `Level ${req1}`;
-    if (req2 !== null) return `Level ${req2}`;
-
-    return 'Not specified';
-}
     function getEligibilitySortValue(item) {
         const req1 = parseLevelValue(item.Req_Level1);
         const req2 = parseLevelValue(item.Req_Level2);
