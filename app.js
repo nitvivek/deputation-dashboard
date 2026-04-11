@@ -260,10 +260,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 const req2 = parseLevelValue(item.Req_Level2);
 
                 // Exact-match eligibility across up to two feeder levels
-                if (req1 !== null && req2 !== null) {
-                    if (userLevel !== req1 && userLevel !== req2) {
-                        return false;
-                    }
+               if (req1 !== null && req2 !== null) {
+    const minReq = Math.min(req1, req2);
+    const maxReq = Math.max(req1, req2);
+    if (userLevel < minReq || userLevel > maxReq) {
+        return false;
+    }
+}
                 } else if (req1 !== null) {
                     if (userLevel !== req1) return false;
                 } else if (req2 !== null) {
