@@ -601,21 +601,22 @@ document.addEventListener('DOMContentLoaded', () => {
         return Number.isNaN(num) ? fallback : num;
     }
 
-    function formatEligibility(item) {
-        const req1 = parseLevelValue(item.Req_Level1);
-        const req2 = parseLevelValue(item.Req_Level2);
+   function formatEligibility(item) {
+    const req1 = parseLevelValue(item.Req_Level1);
+    const req2 = parseLevelValue(item.Req_Level2);
 
-        if (req1 !== null && req2 !== null) {
-            if (req1 === req2) return `Level ${req1}`;
-            return `Level ${req1} or Level ${req2}`;
-        }
-
-        if (req1 !== null) return `Level ${req1}`;
-        if (req2 !== null) return `Level ${req2}`;
-
-        return 'Not specified';
+    if (req1 !== null && req2 !== null) {
+        if (req1 === req2) return `Level ${req1}`;
+        const minReq = Math.min(req1, req2);
+        const maxReq = Math.max(req1, req2);
+        return `Level ${minReq} to Level ${maxReq}`;
     }
 
+    if (req1 !== null) return `Level ${req1}`;
+    if (req2 !== null) return `Level ${req2}`;
+
+    return 'Not specified';
+}
     function getEligibilitySortValue(item) {
         const req1 = parseLevelValue(item.Req_Level1);
         const req2 = parseLevelValue(item.Req_Level2);
