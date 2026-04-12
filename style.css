@@ -782,3 +782,206 @@ select:focus {
         padding: 1.2rem;
     }
 }
+/* ===== PREMIUM CARD UI UPGRADE ===== */
+
+.premium-cards-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+    gap: 1.5rem;
+}
+
+.premium-card {
+    padding: 1.4rem;
+    gap: 1rem;
+    overflow: hidden;
+}
+
+.job-card-top {
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+}
+
+.job-meta-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.6rem;
+}
+
+.meta-pill {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.38rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.55);
+    color: var(--text-secondary);
+    backdrop-filter: blur(8px);
+}
+
+.meta-pill-level {
+    color: var(--primary-color);
+    border-color: rgba(34, 211, 238, 0.24);
+    background: rgba(34, 211, 238, 0.08);
+}
+
+.meta-pill-eligibility {
+    color: #cbd5e1;
+    border-color: rgba(148, 163, 184, 0.18);
+}
+
+.job-title-block {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.premium-card .job-title {
+    font-size: 1.55rem;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    font-weight: 800;
+}
+
+.premium-card .job-org {
+    font-size: 0.98rem;
+    color: var(--text-secondary);
+    line-height: 1.35;
+}
+
+.job-highlight-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem;
+}
+
+.highlight-box {
+    border: 1px solid var(--border-color);
+    background: rgba(2, 6, 23, 0.34);
+    border-radius: 16px;
+    padding: 0.95rem 1rem;
+    min-height: 82px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.3rem;
+}
+
+.highlight-label {
+    font-size: 0.76rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.highlight-value {
+    font-size: 1.02rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.highlight-closing {
+    border-color: rgba(244, 63, 94, 0.28);
+    background: rgba(244, 63, 94, 0.07);
+}
+
+.highlight-expired {
+    border-color: rgba(148, 163, 184, 0.24);
+    background: rgba(100, 116, 139, 0.12);
+}
+
+.highlight-normal {
+    border-color: rgba(34, 211, 238, 0.14);
+}
+
+.premium-details {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.9rem 1rem;
+    padding: 1rem 0;
+    border-top: 1px dashed var(--border-color);
+    border-bottom: 1px dashed var(--border-color);
+}
+
+.premium-details .detail-item {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.28rem;
+    min-width: 0;
+}
+
+.detail-label {
+    font-size: 0.74rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
+.detail-value {
+    color: var(--text-secondary);
+    font-size: 0.98rem;
+    line-height: 1.35;
+    word-break: break-word;
+}
+
+.job-card-footer {
+    display: flex;
+    gap: 0.8rem;
+    align-items: center;
+    justify-content: flex-start;
+    margin-top: 0.1rem;
+}
+
+.card-action-btn {
+    height: 40px;
+    padding: 0 1rem;
+    border-radius: 12px;
+    border: 1px solid rgba(34, 211, 238, 0.24);
+    background: rgba(34, 211, 238, 0.08);
+    color: var(--primary-color);
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.card-action-btn:hover {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 2px rgba(34, 211, 238, 0.12);
+    transform: translateY(-1px);
+}
+
+.card-action-btn.secondary {
+    border-color: var(--border-color);
+    background: rgba(15, 23, 42, 0.5);
+    color: var(--text-secondary);
+}
+
+.card-action-btn.secondary:hover {
+    border-color: var(--border-highlight);
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .job-highlight-row,
+    .premium-details {
+        grid-template-columns: 1fr;
+    }
+
+    .job-card-footer {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .card-action-btn {
+        width: 100%;
+    }
+
+    .premium-card .job-title {
+        font-size: 1.35rem;
+    }
+}
