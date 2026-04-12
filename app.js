@@ -61,7 +61,6 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             console.log('✅ Loaded vacancies:', rawData.length);
-            console.log('Sample row:', rawData[0]);
 
             populateFilters();
             bindEvents();
@@ -240,9 +239,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const action = cardAction.getAttribute('data-card-action');
                 const vacancyId = cardAction.getAttribute('data-id');
 
-                if (action === 'details') {
-                    openVacancyModal(vacancyId);
-                } else if (action === 'watchlist') {
+                if (action === 'watchlist') {
                     toggleWatchlist(vacancyId);
                     renderDashboard(false);
                 }
@@ -397,37 +394,30 @@ document.addEventListener('DOMContentLoaded', () => {
                     aVal = safe(a.Post_Name).toLowerCase();
                     bVal = safe(b.Post_Name).toLowerCase();
                     break;
-
                 case 'Level_Text':
                     aVal = parseLevelValue(a.Level_Text);
                     bVal = parseLevelValue(b.Level_Text);
                     break;
-
                 case 'Eligibility':
                     aVal = getEligibilitySortValue(a);
                     bVal = getEligibilitySortValue(b);
                     break;
-
                 case 'Ministry':
                     aVal = safe(a.Ministry).toLowerCase();
                     bVal = safe(b.Ministry).toLowerCase();
                     break;
-
                 case 'Location':
                     aVal = formatLocation(a).toLowerCase();
                     bVal = formatLocation(b).toLowerCase();
                     break;
-
                 case 'Days_Left':
                     aVal = parseNumericSafe(a.Days_Left, Number.MAX_SAFE_INTEGER);
                     bVal = parseNumericSafe(b.Days_Left, Number.MAX_SAFE_INTEGER);
                     break;
-
                 case 'Status':
                     aVal = safe(a.Status).toLowerCase();
                     bVal = safe(b.Status).toLowerCase();
                     break;
-
                 default:
                     aVal = safe(a[key]).toLowerCase();
                     bVal = safe(b[key]).toLowerCase();
@@ -528,7 +518,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const message = showWatchlistOnly
                 ? (watchlist.size
                     ? 'No saved vacancies match the current filters.'
-                    : 'No saved vacancies yet. Click Save on any vacancy to add it to your watchlist.')
+                    : 'No saved vacancies yet. Click the heart on any vacancy to save it.')
                 : 'No vacancies match the current filters.';
 
             dataContainer.className = `data-container view-${currentView}`;
@@ -559,6 +549,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
+                    <td class="table-heart-cell">
+                        <button
+                            type="button"
+                            class="table-heart-btn ${saved ? 'saved' : ''}"
+                            data-table-action="watchlist"
+                            data-id="${escapeHtml(vacancyId)}"
+                            aria-label="${saved ? 'Remove from saved vacancies' : 'Save vacancy'}"
+                            aria-pressed="${saved ? 'true' : 'false'}"
+                        >
+                            <i data-lucide="heart"></i>
+                        </button>
+                    </td>
                     <td>
                         <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
                         <div style="margin-top:6px;color:var(--text-secondary);font-size:0.85rem;">
@@ -580,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="table-link-cell">
                         ${detailedNotificationLink ? `
                             <a class="table-link-btn" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                Notification
+                                Detailed Notification
                             </a>
                         ` : '—'}
                     </td>
@@ -591,16 +593,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             </a>
                         ` : '—'}
                     </td>
-                    <td class="table-action-cell">
-                        <button
-                            type="button"
-                            class="table-action-btn ${saved ? 'saved' : ''}"
-                            data-table-action="watchlist"
-                            data-id="${escapeHtml(vacancyId)}"
-                        >
-                            ${saved ? 'Saved' : 'Save'}
-                        </button>
-                    </td>
                 </tr>
             `;
         }).join('');
@@ -610,6 +602,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <table class="data-table">
                     <thead>
                         <tr>
+                            <th>Save</th>
                             ${renderSortableHeader('Post Name', 'Post_Name')}
                             ${renderSortableHeader('Level', 'Level_Text')}
                             ${renderSortableHeader('Eligibility', 'Eligibility')}
@@ -619,7 +612,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${renderSortableHeader('Status', 'Status')}
                             <th>Notification</th>
                             <th>Apply</th>
-                            <th>Save</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
@@ -655,6 +647,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             return `
                 <div class="job-card premium-card clickable-card" data-open-details="${escapeHtml(vacancyId)}">
+                    <button
+                        type="button"
+                        class="card-heart-btn ${saved ? 'saved' : ''}"
+                        data-card-action="watchlist"
+                        data-id="${escapeHtml(vacancyId)}"
+                        aria-label="${saved ? 'Remove from saved vacancies' : 'Save vacancy'}"
+                        aria-pressed="${saved ? 'true' : 'false'}"
+                        onclick="event.stopPropagation();"
+                    >
+                        <i data-lucide="heart"></i>
+                    </button>
+
                     <div class="job-card-top">
                         <div class="job-meta-row">
                             <span class="meta-pill meta-pill-level">
@@ -715,49 +719,33 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
 
-                    <div class="job-card-footer">
-                        <button
-                            type="button"
-                            class="card-action-btn"
-                            data-card-action="details"
-                            data-id="${escapeHtml(vacancyId)}"
-                        >
-                            View Details
-                        </button>
+                    ${(detailedNotificationLink || applyLink) ? `
+                        <div class="job-card-footer">
+                            ${detailedNotificationLink ? `
+                                <a
+                                    class="card-action-btn secondary"
+                                    href="${escapeHtml(detailedNotificationLink)}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onclick="event.stopPropagation();"
+                                >
+                                    Detailed Notification
+                                </a>
+                            ` : ''}
 
-                        ${detailedNotificationLink ? `
-                            <a
-                                class="card-action-btn secondary"
-                                href="${escapeHtml(detailedNotificationLink)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onclick="event.stopPropagation();"
-                            >
-                                Notification
-                            </a>
-                        ` : ''}
-
-                        ${applyLink ? `
-                            <a
-                                class="card-action-btn secondary apply-btn"
-                                href="${escapeHtml(applyLink)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                onclick="event.stopPropagation();"
-                            >
-                                Apply
-                            </a>
-                        ` : ''}
-
-                        <button
-                            type="button"
-                            class="card-action-btn secondary ${saved ? 'saved' : ''}"
-                            data-card-action="watchlist"
-                            data-id="${escapeHtml(vacancyId)}"
-                        >
-                            ${saved ? 'Saved' : 'Save'}
-                        </button>
-                    </div>
+                            ${applyLink ? `
+                                <a
+                                    class="card-action-btn secondary apply-btn"
+                                    href="${escapeHtml(applyLink)}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onclick="event.stopPropagation();"
+                                >
+                                    Apply
+                                </a>
+                            ` : ''}
+                        </div>
+                    ` : ''}
                 </div>
             `;
         }).join('');
@@ -959,7 +947,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            Notification
+                            Detailed Notification
                         </a>
                     ` : ''}
 
