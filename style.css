@@ -1435,3 +1435,49 @@ select:focus {
     background: rgba(34, 197, 94, 0.08);
     color: var(--success-color);
 }
+/* ===== modal polish patch ===== */
+
+.application-mode-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.4rem 0.8rem;
+    border-radius: 9999px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    border: 1px solid var(--border-color);
+    background: rgba(15, 23, 42, 0.55);
+    color: var(--text-secondary);
+}
+
+.application-mode-badge.mode-online {
+    color: var(--primary-color);
+    border-color: rgba(34, 211, 238, 0.28);
+    background: rgba(34, 211, 238, 0.08);
+}
+
+.application-mode-badge.mode-physical {
+    color: var(--warning-color);
+    border-color: rgba(245, 158, 11, 0.28);
+    background: rgba(245, 158, 11, 0.08);
+}
+
+.application-mode-badge.mode-both {
+    color: var(--success-color);
+    border-color: rgba(34, 197, 94, 0.28);
+    background: rgba(34, 197, 94, 0.08);
+}
+
+.application-mode-badge.mode-default {
+    color: var(--text-secondary);
+}
+
+.closing-date-text {
+    color: var(--danger-color);
+    font-weight: 700;
+}
+
+.apply-btn {
+    border-color: rgba(34, 197, 94, 0.28) !important;
+    background: rgba(34, 197, 94, 0.08) !important;
+    color: var(--success-color) !important;
+}
