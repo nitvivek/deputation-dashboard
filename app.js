@@ -516,20 +516,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         )}</div>
                     </div>
 
-                    <div class="job-details">
-                        <div class="detail-item"><strong>Level:</strong> ${escapeHtml(safe(item.Level_Text) || '—')}</div>
-                        <div class="detail-item"><strong>Eligibility:</strong> ${escapeHtml(formatEligibility(item))}</div>
-                        <div class="detail-item"><strong>Ministry:</strong> ${escapeHtml(safe(item.Ministry) || '—')}</div>
-                        <div class="detail-item"><strong>Location:</strong> ${escapeHtml(formatLocation(item) || '—')}</div>
-                        <div class="detail-item"><strong>Status:</strong> ${escapeHtml(safe(item.Status) || '—')}</div>
-                        <div class="detail-item">
-                            <strong>Days Left:</strong>
-                            <span class="days-left ${closingSoon ? 'closing' : ''}">
-                                ${Number.isNaN(daysLeft) ? '—' : `${daysLeft} days`}
-                            </span>
-                        </div>
-                    </div>
-                </div>
+<div class="job-details">
+    <div class="detail-item"> <strong>Level:</strong> ${escapeHtml(safe(item.Level_Text) || '—')}</div>
+    <div class="detail-item"> <strong>Eligibility:</strong> ${escapeHtml(formatEligibility(item))}</div>
+    <div class="detail-item"> <strong>Location:</strong> ${escapeHtml(formatLocation(item) || '—')} </div>
+    <div class="detail-item"> <strong>Status:</strong> ${escapeHtml(safe(item.Status) || '—')} </div>
+    <div class="detail-item"> <strong>Days Left:</strong> <span class="days-left ${closingSoon ? 'closing' : ''}">
+            ${Number.isNaN(daysLeft) ? '—' : `${daysLeft} days`}
+        </span>
+    </div>
+</div>
+</div>
             `;
         }).join('');
 
