@@ -1481,3 +1481,59 @@ select:focus {
     background: rgba(34, 197, 94, 0.08) !important;
     color: var(--success-color) !important;
 }
+/* ===== card heart save button ===== */
+
+.premium-card {
+    position: relative;
+}
+
+.card-heart-btn {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    width: 42px;
+    height: 42px;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(255, 255, 255, 0.75);
+    background: rgba(255, 255, 255, 0.02);
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    z-index: 5;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(8px);
+}
+
+.card-heart-btn i {
+    width: 18px;
+    height: 18px;
+    stroke-width: 2.1;
+}
+
+.card-heart-btn:hover {
+    transform: scale(1.06);
+    border-color: #ffffff;
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.card-heart-btn.saved {
+    border-color: rgba(244, 63, 94, 0.55);
+    background: rgba(244, 63, 94, 0.14);
+    color: var(--danger-color);
+}
+
+.card-heart-btn.saved:hover {
+    border-color: rgba(244, 63, 94, 0.8);
+    background: rgba(244, 63, 94, 0.18);
+}
+
+.card-heart-btn.saved i {
+    fill: currentColor;
+}
+
+/* little spacing so title area doesn't collide with heart */
+.job-card-top {
+    padding-right: 3.2rem;
+}
