@@ -733,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
                                 rel="noopener noreferrer"
                                 onclick="event.stopPropagation();"
                             >
-                                Detailed Notification
+                                Notification
                             </a>
                         ` : ''}
 
@@ -959,7 +959,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             target="_blank"
                             rel="noopener noreferrer"
                         >
-                            Detailed Notification
+                            Notification
                         </a>
                     ` : ''}
 
