@@ -739,7 +739,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         ${applyLink ? `
                             <a
-                                class="card-action-btn secondary"
+                                class="card-action-btn secondary apply-btn"
                                 href="${escapeHtml(applyLink)}"
                                 target="_blank"
                                 rel="noopener noreferrer"
@@ -843,9 +843,13 @@ document.addEventListener('DOMContentLoaded', () => {
         const eligibility = formatEligibility(item);
         const status = safe(item.Status) || '—';
 
-        const closingDate = safe(item.Last_Date_To_Apply) || 'Not specified';
-        const notificationDate = safe(item.Notification_Date) || 'Not specified';
+        const rawClosingDate = safe(item.Last_Date_To_Apply);
+        const rawNotificationDate = safe(item.Notification_Date);
         const modeOfApplication = safe(item.Mode_of_Application) || 'Not specified';
+
+        const closingDate = formatDisplayDate(rawClosingDate);
+        const notificationDate = formatDisplayDate(rawNotificationDate);
+        const closingDateDays = getDaysUntilDate(rawClosingDate);
 
         const tenure = getFirstNonEmpty(item, [
             'Tenure',
@@ -920,9 +924,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${buildModalField('Pay Level', level)}
                         ${buildModalField('Days Left', formatDaysLeft(daysLeft))}
                         ${buildModalField('Organisation', organisation || 'Not specified')}
-                        ${buildModalField('Closing Date', closingDate)}
+                        ${buildModalField(
+                            'Closing Date',
+                            `<span class="${closingDateDays !== null && closingDateDays >= 0 && closingDateDays <= 15 ? 'closing-date-text' : ''}">${escapeHtml(closingDate)}</span>`,
+                            true
+                        )}
                         ${buildModalField('Notification Date', notificationDate)}
-                        ${buildModalField('Mode of Application', modeOfApplication)}
+                        ${buildModalField('Mode of Application', renderModeBadge(modeOfApplication), true)}
                         ${tenure ? buildModalField('Tenure', tenure) : ''}
                         ${ageLimit ? buildModalField('Age Limit', ageLimit) : ''}
                         ${payScale ? buildModalField('Pay / Scale', payScale) : ''}
@@ -957,7 +965,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     ${applyLink ? `
                         <a
-                            class="card-action-btn secondary"
+                            class="card-action-btn secondary apply-btn"
                             href="${escapeHtml(applyLink)}"
                             target="_blank"
                             rel="noopener noreferrer"
@@ -970,11 +978,11 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function buildModalField(label, value) {
+    function buildModalField(label, value, isHtml = false) {
         return `
             <div class="modal-field">
                 <div class="modal-field-label">${escapeHtml(label)}</div>
-                <div class="modal-field-value">${escapeHtml(value)}</div>
+                <div class="modal-field-value">${isHtml ? value : escapeHtml(value)}</div>
             </div>
         `;
     }
@@ -1131,6 +1139,54 @@ document.addEventListener('DOMContentLoaded', () => {
         if (/^https?:\/\//i.test(url)) return url;
         if (/^www\./i.test(url)) return `https://${url}`;
         return '';
+    }
+
+    function formatDisplayDate(value) {
+        const raw = safe(value);
+        if (!raw || ['-', '—', 'na', 'n/a', 'null', 'undefined'].includes(raw.toLowerCase())) {
+            return 'Not specified';
+        }
+
+        const parsed = new Date(raw);
+        if (!Number.isNaN(parsed.getTime())) {
+            return parsed.toLocaleDateString('en-IN', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric'
+            });
+        }
+
+        return raw;
+    }
+
+    function getDaysUntilDate(value) {
+        const raw = safe(value);
+        if (!raw) return null;
+
+        const parsed = new Date(raw);
+        if (Number.isNaN(parsed.getTime())) return null;
+
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const target = new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate());
+
+        const diffMs = target - today;
+        return Math.round(diffMs / (1000 * 60 * 60 * 24));
+    }
+
+    function getApplicationModeClass(mode) {
+        const text = safe(mode).toLowerCase();
+
+        if (text.includes('both')) return 'mode-both';
+        if (text.includes('online')) return 'mode-online';
+        if (text.includes('physical') || text.includes('offline') || text.includes('post')) return 'mode-physical';
+
+        return 'mode-default';
+    }
+
+    function renderModeBadge(mode) {
+        const safeMode = safe(mode) || 'Not specified';
+        return `<span class="application-mode-badge ${getApplicationModeClass(safeMode)}">${escapeHtml(safeMode)}</span>`;
     }
 
     function escapeHtml(str) {
