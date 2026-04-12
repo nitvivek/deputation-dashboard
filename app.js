@@ -2,7 +2,6 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 App started');
 
     const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vRtNK339wNsCATEu20kc0XPlFjHKKahfxZqunH3Gll2mA-9witdSGrKB3-1jmeauT5gbwkNg5Y8rCKk/pub?output=csv';
-    const WATCHLIST_KEY = 'deputation_watchlist_v1';
 
     const kpiGrid = document.getElementById('kpiGrid');
     const resultsCount = document.getElementById('resultsCount');
@@ -29,9 +28,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rawData = [];
     let currentView = 'table';
-    let watchlistOnly = false;
-    let modalOpenVacancyId = null;
-    let watchlist = loadWatchlist();
 
     let sortState = {
         key: 'Days_Left',
@@ -42,6 +38,12 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage: 1,
         pageSize: 10
     };
+
+    let watchlist = loadWatchlist();
+    let showWatchlistOnly = false;
+
+    initializeModal();
+    updateWatchlistUI();
 
     dataContainer.innerHTML = `
         <div class="empty-state">
@@ -59,10 +61,10 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             console.log('✅ Loaded vacancies:', rawData.length);
+            console.log('Sample row:', rawData[0]);
 
             populateFilters();
             bindEvents();
-            updateWatchlistUI();
             renderDashboard();
             lucide.createIcons();
         },
@@ -76,6 +78,42 @@ document.addEventListener('DOMContentLoaded', () => {
             resultsCount.textContent = 'Failed to load';
         }
     });
+
+    function initializeModal() {
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeVacancyModal);
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeVacancyModal();
+                    return;
+                }
+
+                const modalWatchBtn = e.target.closest('[data-modal-action="watchlist"]');
+                if (modalWatchBtn) {
+                    const vacancyId = modalWatchBtn.getAttribute('data-id');
+                    const wasSaved = watchlist.has(safe(vacancyId));
+
+                    toggleWatchlist(vacancyId);
+                    renderDashboard(false);
+
+                    if (showWatchlistOnly && wasSaved) {
+                        closeVacancyModal();
+                    } else {
+                        openVacancyModal(vacancyId);
+                    }
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+                closeVacancyModal();
+            }
+        });
+    }
 
     function populateFilters() {
         for (let i = 18; i >= 1; i--) {
@@ -121,7 +159,7 @@ document.addEventListener('DOMContentLoaded', () => {
             filterMinistry.value = '';
             filterLocation.value = '';
             filterStatus.value = 'Active';
-            watchlistOnly = false;
+            showWatchlistOnly = false;
             pagination.currentPage = 1;
             renderDashboard();
         });
@@ -141,12 +179,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
 
         favBtn.addEventListener('click', () => {
-            watchlistOnly = !watchlistOnly;
+            showWatchlistOnly = !showWatchlistOnly;
             pagination.currentPage = 1;
             renderDashboard();
         });
 
-        activeFilters.addEventListener('click', e => {
+        activeFilters.addEventListener('click', (e) => {
             const chip = e.target.closest('[data-remove-filter]');
             if (!chip) return;
 
@@ -158,16 +196,17 @@ document.addEventListener('DOMContentLoaded', () => {
             if (filterName === 'ministry') filterMinistry.value = '';
             if (filterName === 'location') filterLocation.value = '';
             if (filterName === 'status') filterStatus.value = '';
-            if (filterName === 'watchlist') watchlistOnly = false;
+            if (filterName === 'watchlist') showWatchlistOnly = false;
 
             pagination.currentPage = 1;
             renderDashboard();
         });
 
-        dataContainer.addEventListener('click', e => {
+        dataContainer.addEventListener('click', (e) => {
             const sortBtn = e.target.closest('[data-sort]');
             if (sortBtn) {
-                toggleSort(sortBtn.getAttribute('data-sort'));
+                const key = sortBtn.getAttribute('data-sort');
+                toggleSort(key);
                 return;
             }
 
@@ -196,46 +235,35 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
 
-            const cardActionBtn = e.target.closest('[data-card-action]');
-            if (cardActionBtn) {
-                const action = cardActionBtn.getAttribute('data-card-action');
-                const vacancyId = cardActionBtn.getAttribute('data-id');
+            const cardAction = e.target.closest('[data-card-action]');
+            if (cardAction) {
+                const action = cardAction.getAttribute('data-card-action');
+                const vacancyId = cardAction.getAttribute('data-id');
 
                 if (action === 'details') {
-                    openModal(vacancyId);
+                    openVacancyModal(vacancyId);
                 } else if (action === 'watchlist') {
                     toggleWatchlist(vacancyId);
+                    renderDashboard(false);
                 }
                 return;
             }
 
-            if (e.target.closest('button, a, input, select, label')) return;
+            const tableAction = e.target.closest('[data-table-action]');
+            if (tableAction) {
+                const action = tableAction.getAttribute('data-table-action');
+                const vacancyId = tableAction.getAttribute('data-id');
 
-            const openable = e.target.closest('[data-open-modal]');
-            if (openable) {
-                openModal(openable.getAttribute('data-id'));
+                if (action === 'watchlist') {
+                    toggleWatchlist(vacancyId);
+                    renderDashboard(false);
+                }
+                return;
             }
-        });
 
-        modalBody.addEventListener('click', e => {
-            const modalWatchBtn = e.target.closest('[data-modal-watchlist]');
-            if (modalWatchBtn) {
-                const vacancyId = modalWatchBtn.getAttribute('data-modal-watchlist');
-                toggleWatchlist(vacancyId);
-            }
-        });
-
-        closeModalBtn.addEventListener('click', closeModal);
-
-        modal.addEventListener('click', e => {
-            if (e.target === modal) {
-                closeModal();
-            }
-        });
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape' && modal.style.display === 'flex') {
-                closeModal();
+            const detailsTrigger = e.target.closest('[data-open-details]');
+            if (detailsTrigger) {
+                openVacancyModal(detailsTrigger.getAttribute('data-open-details'));
             }
         });
     }
@@ -296,12 +324,12 @@ document.addEventListener('DOMContentLoaded', () => {
         const status = filterStatus.value;
 
         return rawData.filter(item => {
-            const vacancyId = safe(item.Vacancy_ID);
             const itemStatus = safe(item.Status);
             const itemLevel = safe(item.Level_Text);
             const itemMinistry = safe(item.Ministry);
             const itemLocation = formatLocation(item);
             const itemDaysLeft = parseInt(item.Days_Left, 10);
+            const itemId = safe(item.Vacancy_ID);
 
             const searchableText = [
                 item.Post_Name,
@@ -317,7 +345,6 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.Desirable_Qualification
             ].map(safe).join(' ').toLowerCase();
 
-            if (watchlistOnly && !watchlist.has(vacancyId)) return false;
             if (search && !searchableText.includes(search)) return false;
             if (level && itemLevel !== level) return false;
             if (ministry && itemMinistry !== ministry) return false;
@@ -343,6 +370,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 } else {
                     return false;
                 }
+            }
+
+            if (showWatchlistOnly && !watchlist.has(itemId)) {
+                return false;
             }
 
             if (!Number.isNaN(itemDaysLeft) && status === 'Active' && itemDaysLeft < 0) {
@@ -448,6 +479,13 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    function updateWatchlistUI() {
+        favCount.textContent = String(watchlist.size);
+        favBtn.classList.toggle('active', showWatchlistOnly);
+        favBtn.setAttribute('aria-pressed', String(showWatchlistOnly));
+        favBtn.title = showWatchlistOnly ? 'Show all vacancies' : 'Show watchlist';
+    }
+
     function renderActiveFilterChips() {
         const chips = [];
 
@@ -469,8 +507,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (filterStatus.value) {
             chips.push(makeChip('status', `Status: ${escapeHtml(filterStatus.value)}`));
         }
-        if (watchlistOnly) {
-            chips.push(makeChip('watchlist', 'Watchlist Only'));
+        if (showWatchlistOnly) {
+            chips.push(makeChip('watchlist', 'Watchlist'));
         }
 
         activeFilters.innerHTML = chips.join('');
@@ -487,10 +525,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function renderResults(data, totalCount, totalPages) {
         if (!totalCount) {
+            const message = showWatchlistOnly
+                ? (watchlist.size
+                    ? 'No saved vacancies match the current filters.'
+                    : 'No saved vacancies yet. Click Save on any vacancy to add it to your watchlist.')
+                : 'No vacancies match the current filters.';
+
             dataContainer.className = `data-container view-${currentView}`;
             dataContainer.innerHTML = `
                 <div class="empty-state">
-                    ${watchlistOnly ? 'No saved vacancies match the current filters.' : 'No vacancies match the current filters.'}
+                    ${escapeHtml(message)}
                 </div>
             `;
             return;
@@ -507,31 +551,39 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderTable(data) {
         const rows = data.map(item => {
             const vacancyId = safe(item.Vacancy_ID);
-            const saved = isInWatchlist(vacancyId);
+            const saved = watchlist.has(vacancyId);
             const daysLeft = parseInt(item.Days_Left, 10);
             const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
-            const status = safe(item.Status) || '—';
 
             return `
-                <tr class="clickable-row" data-open-modal="true" data-id="${escapeHtml(vacancyId)}">
+                <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
                     <td>
                         <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
-                        <div class="table-subline">
-                            ${escapeHtml(safe(item.Department_Organisation) || safe(item.Ministry) || '')}
+                        <div style="margin-top:6px;color:var(--text-secondary);font-size:0.85rem;">
+                            ${escapeHtml(safe(item.Department_Organisation) || '')}
                         </div>
-                        ${saved ? '<div class="table-subline saved-flag">Saved to watchlist</div>' : ''}
                     </td>
                     <td>${escapeHtml(safe(item.Level_Text) || '—')}</td>
                     <td>${escapeHtml(formatEligibility(item))}</td>
                     <td>${escapeHtml(safe(item.Ministry) || '—')}</td>
                     <td>${escapeHtml(formatLocation(item) || '—')}</td>
                     <td class="days-left ${closingSoon ? 'closing' : ''}">
-                        ${formatDaysLeft(daysLeft)}
+                        ${escapeHtml(formatDaysLeft(daysLeft))}
                     </td>
                     <td>
-                        <span class="badge ${status === 'Active' ? 'badge-active' : ''}">
-                            ${escapeHtml(status)}
+                        <span class="badge ${safe(item.Status) === 'Active' ? 'badge-active' : ''}">
+                            ${escapeHtml(safe(item.Status) || '—')}
                         </span>
+                    </td>
+                    <td class="table-action-cell">
+                        <button
+                            type="button"
+                            class="table-action-btn ${saved ? 'saved' : ''}"
+                            data-table-action="watchlist"
+                            data-id="${escapeHtml(vacancyId)}"
+                        >
+                            ${saved ? 'Saved' : 'Save'}
+                        </button>
                     </td>
                 </tr>
             `;
@@ -549,6 +601,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${renderSortableHeader('Location', 'Location')}
                             ${renderSortableHeader('Days Left', 'Days_Left')}
                             ${renderSortableHeader('Status', 'Status')}
+                            <th>Save</th>
                         </tr>
                     </thead>
                     <tbody>${rows}</tbody>
@@ -574,14 +627,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function renderCards(data) {
         const cards = data.map(item => {
             const vacancyId = safe(item.Vacancy_ID);
-            const saved = isInWatchlist(vacancyId);
+            const saved = watchlist.has(vacancyId);
             const daysLeft = parseInt(item.Days_Left, 10);
             const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
             const expired = !Number.isNaN(daysLeft) && daysLeft < 0;
             const status = safe(item.Status) || '—';
 
             return `
-                <div class="job-card premium-card" data-open-modal="true" data-id="${escapeHtml(vacancyId)}">
+                <div class="job-card premium-card clickable-card" data-open-details="${escapeHtml(vacancyId)}">
                     <div class="job-card-top">
                         <div class="job-meta-row">
                             <span class="meta-pill meta-pill-level">
@@ -590,7 +643,6 @@ document.addEventListener('DOMContentLoaded', () => {
                             <span class="meta-pill meta-pill-eligibility">
                                 Eligible: ${escapeHtml(formatEligibility(item))}
                             </span>
-                            ${saved ? '<span class="meta-pill meta-pill-saved">Saved</span>' : ''}
                         </div>
 
                         <div class="job-title-block">
@@ -607,7 +659,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="highlight-box ${expired ? 'highlight-expired' : closingSoon ? 'highlight-closing' : 'highlight-normal'}">
                             <div class="highlight-label">Days Left</div>
                             <div class="highlight-value ${closingSoon ? 'days-left closing' : ''}">
-                                ${formatDaysLeft(daysLeft)}
+                                ${escapeHtml(formatDaysLeft(daysLeft))}
                             </div>
                         </div>
 
@@ -644,15 +696,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     </div>
 
                     <div class="job-card-footer">
-                        <button type="button" class="card-action-btn" data-card-action="details" data-id="${escapeHtml(vacancyId)}">
+                        <button
+                            type="button"
+                            class="card-action-btn"
+                            data-card-action="details"
+                            data-id="${escapeHtml(vacancyId)}"
+                        >
                             View Details
                         </button>
+
                         <button
                             type="button"
                             class="card-action-btn secondary ${saved ? 'saved' : ''}"
                             data-card-action="watchlist"
                             data-id="${escapeHtml(vacancyId)}"
-                            aria-pressed="${saved ? 'true' : 'false'}"
                         >
                             ${saved ? 'Saved' : 'Save'}
                         </button>
@@ -707,235 +764,234 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function openModal(vacancyId) {
+    function openVacancyModal(vacancyId) {
         const item = getItemById(vacancyId);
-        if (!item) return;
+        if (!item || !modal || !modalBody) return;
 
-        modalOpenVacancyId = String(vacancyId);
-        modalBody.innerHTML = renderModalContent(item);
+        modalBody.innerHTML = buildModalContent(item);
         modal.style.display = 'flex';
         lucide.createIcons();
     }
 
-    function closeModal() {
+    function closeVacancyModal() {
+        if (!modal || !modalBody) return;
         modal.style.display = 'none';
         modalBody.innerHTML = '';
-        modalOpenVacancyId = null;
     }
 
-    function renderModalContent(item) {
+    function buildModalContent(item) {
         const vacancyId = safe(item.Vacancy_ID);
-        const saved = isInWatchlist(vacancyId);
+        const saved = watchlist.has(vacancyId);
         const daysLeft = parseInt(item.Days_Left, 10);
+        const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
+        const expired = !Number.isNaN(daysLeft) && daysLeft < 0;
+
+        const title = safe(item.Post_Name) || '—';
+        const ministry = safe(item.Ministry) || '—';
+        const organisation = getFirstNonEmpty(item, [
+            'Department_Organisation',
+            'Organisation',
+            'Department',
+            'Office'
+        ]);
+        const location = formatLocation(item) || 'Not specified';
+        const level = safe(item.Level_Text) || '—';
+        const eligibility = formatEligibility(item);
         const status = safe(item.Status) || '—';
 
-        const subtitle = buildModalSubtitle(item);
-        const officialLink = getOfficialLink(item);
-        const closingDate = pickFirstNonEmpty(item, [
-            'Closing_Date', 'Closing Date', 'Last_Date', 'Last Date',
-            'End_Date', 'End Date', 'Apply_By', 'Apply By'
+        const closingDate = getFirstNonEmpty(item, [
+            'Closing_Date',
+            'Application_Last_Date',
+            'Last_Date',
+            'End_Date'
         ]);
 
-        const ageLimit = pickFirstNonEmpty(item, [
-            'Age_Limit', 'Age Limit', 'Max_Age', 'Maximum Age', 'Age'
+        const tenure = getFirstNonEmpty(item, [
+            'Tenure',
+            'Deputation_Tenure',
+            'Period_of_Deputation'
         ]);
 
-        const tenure = pickFirstNonEmpty(item, [
-            'Tenure', 'Deputation_Tenure', 'Deputation Tenure',
-            'Period_of_Deputation', 'Period of Deputation'
+        const ageLimit = getFirstNonEmpty(item, [
+            'Age_Limit',
+            'Maximum_Age',
+            'Age'
         ]);
 
-        const applicationMode = pickFirstNonEmpty(item, [
-            'Application_Mode', 'Application Mode', 'Mode_of_Application',
-            'Mode of Application', 'Apply_Mode'
+        const payScale = getFirstNonEmpty(item, [
+            'Pay_Scale',
+            'PayScale',
+            'Pay_Band'
         ]);
 
-        const essentialQualification = pickFirstNonEmpty(item, [
-            'Essential_Qualification', 'Essential Qualification',
+        const essentialQualification = getFirstNonEmpty(item, [
+            'Essential_Qualification',
+            'Qualification',
             'Essential Qualifications'
         ]);
 
-        const desirableQualification = pickFirstNonEmpty(item, [
-            'Desirable_Qualification', 'Desirable Qualification',
+        const desirableQualification = getFirstNonEmpty(item, [
+            'Desirable_Qualification',
             'Desirable Qualifications'
         ]);
 
-        const experience = pickFirstNonEmpty(item, [
-            'Experience', 'Required_Experience', 'Required Experience',
-            'Relevant_Experience', 'Relevant Experience'
+        const experience = getFirstNonEmpty(item, [
+            'Experience',
+            'Essential_Experience',
+            'Desirable_Experience'
         ]);
 
-        const description = pickFirstNonEmpty(item, [
-            'Description', 'Post_Description', 'Post Description',
-            'Job_Description', 'Job Description', 'Details'
+        const description = getFirstNonEmpty(item, [
+            'Job_Description',
+            'Description',
+            'Remarks',
+            'Notes'
         ]);
 
-        const remarks = pickFirstNonEmpty(item, [
-            'Remarks', 'Notes', 'Additional_Remarks', 'Additional Remarks'
-        ]);
+        const officialLink = normalizeUrl(getFirstNonEmpty(item, [
+            'Official_Link',
+            'Notification_Link',
+            'Source_URL',
+            'Application_Link',
+            'Apply_Link',
+            'URL',
+            'Link'
+        ]));
 
         return `
             <div class="vacancy-modal">
-                <div class="modal-header-block">
-                    <div class="modal-title-wrap">
-                        <h2 class="modal-title">${escapeHtml(safe(item.Post_Name) || '—')}</h2>
-                        <div class="modal-subtitle">${escapeHtml(subtitle || '—')}</div>
+                <div class="vacancy-modal-header">
+                    <div class="vacancy-modal-title-block">
+                        <div class="vacancy-modal-title">${escapeHtml(title)}</div>
+                        <div class="vacancy-modal-subtitle">${escapeHtml(ministry)}</div>
+                        ${organisation && organisation !== ministry
+                            ? `<div class="vacancy-modal-org">${escapeHtml(organisation)}</div>`
+                            : ''}
                     </div>
 
-                    <div class="modal-actions">
-                        <button
-                            type="button"
-                            class="modal-secondary-btn ${saved ? 'saved' : ''}"
-                            data-modal-watchlist="${escapeHtml(vacancyId)}"
-                        >
-                            ${saved ? 'Remove from Watchlist' : 'Save to Watchlist'}
-                        </button>
-                        ${officialLink ? `
-                            <a
-                                class="modal-primary-btn"
-                                href="${escapeHtml(officialLink)}"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                Official Notice
-                            </a>
-                        ` : ''}
+                    <div class="modal-chip-row">
+                        <span class="badge badge-level">${escapeHtml(level)}</span>
+                        <span class="badge ${status === 'Active' ? 'badge-active' : ''}">${escapeHtml(status)}</span>
+                        <span class="modal-deadline-chip ${expired ? 'expired' : closingSoon ? 'closing' : ''}">
+                            ${escapeHtml(formatDaysLeft(daysLeft))}
+                        </span>
                     </div>
                 </div>
 
-                <div class="modal-chip-row">
-                    <span class="modal-chip">${escapeHtml(safe(item.Level_Text) || '—')}</span>
-                    <span class="modal-chip">Eligibility: ${escapeHtml(formatEligibility(item))}</span>
-                    <span class="modal-chip ${status === 'Active' ? 'status-chip-active' : ''}">
-                        ${escapeHtml(status)}
-                    </span>
-                    ${saved ? '<span class="modal-chip saved-chip">Saved</span>' : ''}
+                <div class="modal-section">
+                    <div class="modal-section-title">Overview</div>
+                    <div class="modal-grid">
+                        ${buildModalField('Eligibility', eligibility)}
+                        ${buildModalField('Location', location)}
+                        ${buildModalField('Pay Level', level)}
+                        ${buildModalField('Days Left', formatDaysLeft(daysLeft))}
+                        ${buildModalField('Organisation', organisation || 'Not specified')}
+                        ${buildModalField('Closing Date', closingDate || 'Not specified')}
+                        ${tenure ? buildModalField('Tenure', tenure) : ''}
+                        ${ageLimit ? buildModalField('Age Limit', ageLimit) : ''}
+                        ${payScale ? buildModalField('Pay / Scale', payScale) : ''}
+                        ${vacancyId ? buildModalField('Vacancy ID', vacancyId) : ''}
+                    </div>
                 </div>
 
-                <div class="modal-grid">
-                    ${buildModalInfoCard('Location', escapeHtml(formatLocation(item) || '—'))}
-                    ${buildModalInfoCard('Organisation', escapeHtml(safe(item.Department_Organisation) || '—'))}
-                    ${buildModalInfoCard('Days Left', `<span class="${daysLeft >= 0 && daysLeft <= 15 ? 'days-left closing' : ''}">${formatDaysLeft(daysLeft)}</span>`)}
-                    ${buildModalInfoCard('Vacancy ID', escapeHtml(vacancyId || '—'))}
-                    ${closingDate ? buildModalInfoCard('Closing Date', escapeHtml(closingDate)) : ''}
-                    ${tenure ? buildModalInfoCard('Tenure', escapeHtml(tenure)) : ''}
-                    ${ageLimit ? buildModalInfoCard('Age Limit', escapeHtml(ageLimit)) : ''}
-                    ${applicationMode ? buildModalInfoCard('Application Mode', escapeHtml(applicationMode)) : ''}
-                </div>
+                ${renderModalRichSection('Essential Qualification', essentialQualification)}
+                ${renderModalRichSection('Desirable Qualification', desirableQualification)}
+                ${renderModalRichSection('Experience', experience)}
+                ${renderModalRichSection('Description / Remarks', description)}
 
-                <div class="modal-sections">
-                    ${essentialQualification ? buildModalSection('Essential Qualification', essentialQualification) : ''}
-                    ${desirableQualification ? buildModalSection('Desirable Qualification', desirableQualification) : ''}
-                    ${experience ? buildModalSection('Experience', experience) : ''}
-                    ${description ? buildModalSection('Description', description) : ''}
-                    ${remarks ? buildModalSection('Remarks', remarks) : ''}
+                <div class="modal-actions">
+                    <button
+                        type="button"
+                        class="card-action-btn ${saved ? 'saved' : ''}"
+                        data-modal-action="watchlist"
+                        data-id="${escapeHtml(vacancyId)}"
+                    >
+                        ${saved ? 'Remove from Watchlist' : 'Save to Watchlist'}
+                    </button>
+
+                    ${officialLink
+                        ? `<a class="card-action-btn secondary" href="${escapeHtml(officialLink)}" target="_blank" rel="noopener noreferrer">Open Source / Notification</a>`
+                        : ''}
                 </div>
             </div>
         `;
     }
 
-    function buildModalInfoCard(label, valueHtml) {
+    function buildModalField(label, value) {
         return `
-            <div class="modal-info-card">
-                <div class="modal-info-label">${label}</div>
-                <div class="modal-info-value">${valueHtml}</div>
+            <div class="modal-field">
+                <div class="modal-field-label">${escapeHtml(label)}</div>
+                <div class="modal-field-value">${escapeHtml(value)}</div>
             </div>
         `;
     }
 
-    function buildModalSection(title, text) {
+    function renderModalRichSection(title, value) {
+        if (!hasMeaningfulValue(value)) return '';
+
         return `
             <div class="modal-section">
                 <div class="modal-section-title">${escapeHtml(title)}</div>
-                <div class="modal-paragraph">${formatTextBlock(text)}</div>
+                <div class="modal-richtext">${formatRichText(value)}</div>
             </div>
         `;
     }
 
-    function buildModalSubtitle(item) {
-        const ministry = safe(item.Ministry);
-        const organisation = safe(item.Department_Organisation);
-
-        if (ministry && organisation && ministry.toLowerCase() !== organisation.toLowerCase()) {
-            return `${ministry} • ${organisation}`;
-        }
-
-        return ministry || organisation || '';
-    }
-
     function toggleWatchlist(vacancyId) {
-        const normalizedId = String(vacancyId);
-        if (!normalizedId) return;
+        const id = safe(vacancyId);
+        if (!id) return;
 
-        if (watchlist.has(normalizedId)) {
-            watchlist.delete(normalizedId);
+        if (watchlist.has(id)) {
+            watchlist.delete(id);
         } else {
-            watchlist.add(normalizedId);
+            watchlist.add(id);
         }
 
         persistWatchlist();
         updateWatchlistUI();
-        renderDashboard(false);
-
-        if (modalOpenVacancyId === normalizedId) {
-            if (watchlistOnly && !watchlist.has(normalizedId)) {
-                closeModal();
-            } else {
-                openModal(normalizedId);
-            }
-        }
     }
 
     function loadWatchlist() {
         try {
-            const stored = localStorage.getItem(WATCHLIST_KEY);
+            const stored = localStorage.getItem('deputationWatchlist');
             if (!stored) return new Set();
 
             const parsed = JSON.parse(stored);
             if (!Array.isArray(parsed)) return new Set();
 
-            return new Set(parsed.map(String));
-        } catch (error) {
-            console.warn('Could not load watchlist from localStorage:', error);
+            return new Set(parsed.map(item => String(item)));
+        } catch (err) {
+            console.warn('Unable to load watchlist:', err);
             return new Set();
         }
     }
 
     function persistWatchlist() {
         try {
-            localStorage.setItem(WATCHLIST_KEY, JSON.stringify([...watchlist]));
-        } catch (error) {
-            console.warn('Could not save watchlist to localStorage:', error);
+            localStorage.setItem('deputationWatchlist', JSON.stringify([...watchlist]));
+        } catch (err) {
+            console.warn('Unable to save watchlist:', err);
         }
     }
 
-    function isInWatchlist(vacancyId) {
-        return watchlist.has(String(vacancyId));
-    }
-
-    function updateWatchlistUI() {
-        favCount.textContent = String(watchlist.size);
-        favBtn.classList.toggle('active-watchlist', watchlistOnly);
-        favBtn.setAttribute('aria-pressed', watchlistOnly ? 'true' : 'false');
-    }
-
     function getItemById(vacancyId) {
-        const normalizedId = String(vacancyId);
-        return rawData.find(item => safe(item.Vacancy_ID) === normalizedId) || null;
+        const id = safe(vacancyId);
+        return rawData.find(item => safe(item.Vacancy_ID) === id) || null;
     }
 
-    function getOfficialLink(item) {
-        const raw = pickFirstNonEmpty(item, [
-            'Official_Link', 'Official Link', 'Notification_Link',
-            'Notification Link', 'Apply_Link', 'Apply Link',
-            'Vacancy_Link', 'Vacancy Link', 'URL', 'Link'
-        ]);
-
-        if (!raw) return '';
-
-        if (/^https?:\/\//i.test(raw)) return raw;
-        if (/^www\./i.test(raw)) return `https://${raw}`;
+    function getFirstNonEmpty(item, keys) {
+        for (const key of keys) {
+            const value = item[key];
+            if (hasMeaningfulValue(value)) {
+                return safe(value);
+            }
+        }
         return '';
+    }
+
+    function hasMeaningfulValue(value) {
+        const text = safe(value).toLowerCase();
+        return Boolean(text) && !['-', '—', 'na', 'n/a', 'null', 'undefined'].includes(text);
     }
 
     function addOptions(selectEl, values) {
@@ -948,26 +1004,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function uniqueSorted(arr) {
-        return [...new Set(arr.map(safe).filter(Boolean))]
-            .sort((a, b) => a.localeCompare(b));
+        return [...new Set(arr.map(safe).filter(Boolean))].sort((a, b) => a.localeCompare(b));
     }
 
     function safe(value) {
         return value == null ? '' : String(value).trim();
     }
 
-    function pickFirstNonEmpty(item, keys) {
-        for (const key of keys) {
-            const value = safe(item[key]);
-            if (value) return value;
-        }
-        return '';
-    }
-
     function formatLocation(item) {
         const city = safe(item.Location_City);
         const state = safe(item.Location_State);
-
         if (city && state) return `${city}, ${state}`;
         return city || state || '';
     }
@@ -1015,15 +1061,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function formatDaysLeft(daysLeft) {
-        if (Number.isNaN(daysLeft)) return '—';
+        if (Number.isNaN(daysLeft)) return 'Not specified';
         if (daysLeft < 0) return 'Expired';
-        if (daysLeft === 0) return 'Today';
-        if (daysLeft === 1) return '1 day';
+        if (daysLeft === 0) return 'Closes today';
         return `${daysLeft} days`;
     }
 
-    function formatTextBlock(text) {
-        return escapeHtml(text).replace(/\n/g, '<br>');
+    function formatRichText(value) {
+        return escapeHtml(safe(value)).replace(/\n/g, '<br>');
+    }
+
+    function normalizeUrl(value) {
+        const url = safe(value);
+        if (!url) return '';
+        if (/^https?:\/\//i.test(url)) return url;
+        if (/^www\./i.test(url)) return `https://${url}`;
+        return '';
     }
 
     function escapeHtml(str) {
