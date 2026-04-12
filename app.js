@@ -580,7 +580,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="table-link-cell">
                         ${detailedNotificationLink ? `
                             <a class="table-link-btn" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                Detailed Notification
+                                Notification
                             </a>
                         ` : '—'}
                     </td>
