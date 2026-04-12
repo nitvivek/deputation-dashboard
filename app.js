@@ -502,37 +502,89 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function renderCards(data) {
-        const cards = data.map(item => {
-            const daysLeft = parseInt(item.Days_Left, 10);
-            const closingSoon = !Number.isNaN(daysLeft) && daysLeft > 0 && daysLeft <= 15;
+   function renderCards(data) {
+    const cards = data.map(item => {
+        const daysLeft = parseInt(item.Days_Left, 10);
+        const closingSoon = !Number.isNaN(daysLeft) && daysLeft > 0 && daysLeft <= 15;
+        const expired = !Number.isNaN(daysLeft) && daysLeft < 0;
+        const status = safe(item.Status) || '—';
 
-            return `
-                <div class="job-card">
-                    <div>
-                        <div class="job-title">${escapeHtml(safe(item.Post_Name) || '—')}</div>
-                        <div class="job-org">${escapeHtml(
-                            safe(item.Department_Organisation) || safe(item.Ministry) || '—'
-                        )}</div>
+        return `
+            <div class="job-card premium-card">
+                <div class="job-card-top">
+                    <div class="job-meta-row">
+                        <span class="meta-pill meta-pill-level">
+                            ${escapeHtml(safe(item.Level_Text) || '—')}
+                        </span>
+                        <span class="meta-pill meta-pill-eligibility">
+                            Eligible: ${escapeHtml(formatEligibility(item))}
+                        </span>
                     </div>
 
-<div class="job-details">
-    <div class="detail-item"> <strong>Level:</strong> ${escapeHtml(safe(item.Level_Text) || '—')}</div>
-    <div class="detail-item"> <strong>Eligibility:</strong> ${escapeHtml(formatEligibility(item))}</div>
-    <div class="detail-item"> <strong>Location:</strong> ${escapeHtml(formatLocation(item) || '—')} </div>
-    <div class="detail-item"> <strong>Status:</strong> ${escapeHtml(safe(item.Status) || '—')} </div>
-    <div class="detail-item"> <strong>Days Left:</strong> <span class="days-left ${closingSoon ? 'closing' : ''}">
-            ${Number.isNaN(daysLeft) ? '—' : `${daysLeft} days`}
-        </span>
-    </div>
-</div>
-</div>
-            `;
-        }).join('');
+                    <div class="job-title-block">
+                        <div class="job-title">
+                            ${escapeHtml(safe(item.Post_Name) || '—')}
+                        </div>
+                        <div class="job-org">
+                            ${escapeHtml(safe(item.Ministry) || safe(item.Department_Organisation) || '—')}
+                        </div>
+                    </div>
+                </div>
 
-        return `<div class="cards-grid">${cards}</div>`;
-    }
+                <div class="job-highlight-row">
+                    <div class="highlight-box ${expired ? 'highlight-expired' : closingSoon ? 'highlight-closing' : 'highlight-normal'}">
+                        <div class="highlight-label">Days Left</div>
+                        <div class="highlight-value ${closingSoon ? 'days-left closing' : ''}">
+                            ${Number.isNaN(daysLeft) ? '—' : expired ? 'Expired' : `${daysLeft} days`}
+                        </div>
+                    </div>
 
+                    <div class="highlight-box">
+                        <div class="highlight-label">Status</div>
+                        <div class="highlight-value">
+                            <span class="badge ${status === 'Active' ? 'badge-active' : ''}">
+                                ${escapeHtml(status)}
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="job-details premium-details">
+                    <div class="detail-item">
+                        <span class="detail-label">Location</span>
+                        <span class="detail-value">${escapeHtml(formatLocation(item) || '—')}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Organisation</span>
+                        <span class="detail-value">${escapeHtml(safe(item.Department_Organisation) || '—')}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Level</span>
+                        <span class="detail-value">${escapeHtml(safe(item.Level_Text) || '—')}</span>
+                    </div>
+
+                    <div class="detail-item">
+                        <span class="detail-label">Eligibility</span>
+                        <span class="detail-value">${escapeHtml(formatEligibility(item))}</span>
+                    </div>
+                </div>
+
+                <div class="job-card-footer">
+                    <button type="button" class="card-action-btn" data-card-action="details" data-id="${escapeHtml(safe(item.Vacancy_ID))}">
+                        View Details
+                    </button>
+                    <button type="button" class="card-action-btn secondary" data-card-action="watchlist" data-id="${escapeHtml(safe(item.Vacancy_ID))}">
+                        Save
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    return `<div class="cards-grid premium-cards-grid">${cards}</div>`;
+}
     function renderPagination(totalPages) {
         if (totalPages <= 1) return '';
 
