@@ -554,6 +554,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const saved = watchlist.has(vacancyId);
             const daysLeft = parseInt(item.Days_Left, 10);
             const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
+            const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
+            const applyLink = normalizeUrl(safe(item.Application_Form_Link));
 
             return `
                 <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
@@ -574,6 +576,20 @@ document.addEventListener('DOMContentLoaded', () => {
                         <span class="badge ${safe(item.Status) === 'Active' ? 'badge-active' : ''}">
                             ${escapeHtml(safe(item.Status) || '—')}
                         </span>
+                    </td>
+                    <td class="table-link-cell">
+                        ${detailedNotificationLink ? `
+                            <a class="table-link-btn" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
+                                Detailed Notification
+                            </a>
+                        ` : '—'}
+                    </td>
+                    <td class="table-link-cell">
+                        ${applyLink ? `
+                            <a class="table-link-btn apply" href="${escapeHtml(applyLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
+                                Apply
+                            </a>
+                        ` : '—'}
                     </td>
                     <td class="table-action-cell">
                         <button
@@ -601,6 +617,8 @@ document.addEventListener('DOMContentLoaded', () => {
                             ${renderSortableHeader('Location', 'Location')}
                             ${renderSortableHeader('Days Left', 'Days_Left')}
                             ${renderSortableHeader('Status', 'Status')}
+                            <th>Notification</th>
+                            <th>Apply</th>
                             <th>Save</th>
                         </tr>
                     </thead>
@@ -632,6 +650,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
             const expired = !Number.isNaN(daysLeft) && daysLeft < 0;
             const status = safe(item.Status) || '—';
+            const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
+            const applyLink = normalizeUrl(safe(item.Application_Form_Link));
 
             return `
                 <div class="job-card premium-card clickable-card" data-open-details="${escapeHtml(vacancyId)}">
@@ -704,6 +724,30 @@ document.addEventListener('DOMContentLoaded', () => {
                         >
                             View Details
                         </button>
+
+                        ${detailedNotificationLink ? `
+                            <a
+                                class="card-action-btn secondary"
+                                href="${escapeHtml(detailedNotificationLink)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onclick="event.stopPropagation();"
+                            >
+                                Detailed Notification
+                            </a>
+                        ` : ''}
+
+                        ${applyLink ? `
+                            <a
+                                class="card-action-btn secondary"
+                                href="${escapeHtml(applyLink)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onclick="event.stopPropagation();"
+                            >
+                                Apply
+                            </a>
+                        ` : ''}
 
                         <button
                             type="button"
@@ -799,12 +843,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const eligibility = formatEligibility(item);
         const status = safe(item.Status) || '—';
 
-        const closingDate = getFirstNonEmpty(item, [
-            'Closing_Date',
-            'Application_Last_Date',
-            'Last_Date',
-            'End_Date'
-        ]);
+        const closingDate = safe(item.Last_Date_To_Apply) || 'Not specified';
+        const notificationDate = safe(item.Notification_Date) || 'Not specified';
+        const modeOfApplication = safe(item.Mode_of_Application) || 'Not specified';
 
         const tenure = getFirstNonEmpty(item, [
             'Tenure',
@@ -848,15 +889,8 @@ document.addEventListener('DOMContentLoaded', () => {
             'Notes'
         ]);
 
-        const officialLink = normalizeUrl(getFirstNonEmpty(item, [
-            'Official_Link',
-            'Notification_Link',
-            'Source_URL',
-            'Application_Link',
-            'Apply_Link',
-            'URL',
-            'Link'
-        ]));
+        const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
+        const applyLink = normalizeUrl(safe(item.Application_Form_Link));
 
         return `
             <div class="vacancy-modal">
@@ -886,11 +920,12 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${buildModalField('Pay Level', level)}
                         ${buildModalField('Days Left', formatDaysLeft(daysLeft))}
                         ${buildModalField('Organisation', organisation || 'Not specified')}
-                        ${buildModalField('Closing Date', closingDate || 'Not specified')}
+                        ${buildModalField('Closing Date', closingDate)}
+                        ${buildModalField('Notification Date', notificationDate)}
+                        ${buildModalField('Mode of Application', modeOfApplication)}
                         ${tenure ? buildModalField('Tenure', tenure) : ''}
                         ${ageLimit ? buildModalField('Age Limit', ageLimit) : ''}
                         ${payScale ? buildModalField('Pay / Scale', payScale) : ''}
-                        ${vacancyId ? buildModalField('Vacancy ID', vacancyId) : ''}
                     </div>
                 </div>
 
@@ -909,9 +944,27 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${saved ? 'Remove from Watchlist' : 'Save to Watchlist'}
                     </button>
 
-                    ${officialLink
-                        ? `<a class="card-action-btn secondary" href="${escapeHtml(officialLink)}" target="_blank" rel="noopener noreferrer">Open Source / Notification</a>`
-                        : ''}
+                    ${detailedNotificationLink ? `
+                        <a
+                            class="card-action-btn secondary"
+                            href="${escapeHtml(detailedNotificationLink)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Detailed Notification
+                        </a>
+                    ` : ''}
+
+                    ${applyLink ? `
+                        <a
+                            class="card-action-btn secondary"
+                            href="${escapeHtml(applyLink)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Apply
+                        </a>
+                    ` : ''}
                 </div>
             </div>
         `;
@@ -1074,6 +1127,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function normalizeUrl(value) {
         const url = safe(value);
         if (!url) return '';
+        if (['-', '—', 'na', 'n/a', 'null', 'undefined'].includes(url.toLowerCase())) return '';
         if (/^https?:\/\//i.test(url)) return url;
         if (/^www\./i.test(url)) return `https://${url}`;
         return '';
