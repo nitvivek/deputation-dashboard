@@ -1,15 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Deputation Vacancies</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    />
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
-    <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div class="bg-shapes">
@@ -22,14 +28,15 @@
         <header class="app-header">
             <div class="header-logo">
                 <i data-lucide="building-2"></i>
-                <h1><span class="gradient-text">DEPUTATION VACANCIES </span> </h1>
+                <h1><span class="gradient-text">DEPUTATION</span> VACANCIES</h1>
             </div>
 
             <div class="header-actions">
-                <button id="favBtn" class="icon-btn" title="My Watchlist" type="button">
+                <button id="favBtn" class="icon-btn" title="Show watchlist" type="button" aria-pressed="false">
                     <i data-lucide="heart"></i>
                     <span id="favCount" class="fav-count">0</span>
                 </button>
+
                 <button id="themeToggle" class="icon-btn" title="Toggle Theme" type="button">
                     <i data-lucide="moon"></i>
                 </button>
@@ -47,7 +54,12 @@
                     <label for="searchPost">Search</label>
                     <div class="input-icon">
                         <i data-lucide="search"></i>
-                        <input type="text" id="searchPost" placeholder="Post, dept, keywords...">
+                        <input
+                            type="text"
+                            id="searchPost"
+                            placeholder="Post, dept, keywords..."
+                            autocomplete="off"
+                        />
                     </div>
                 </div>
 
@@ -95,11 +107,12 @@
 
                 <div class="content-toolbar">
                     <div class="results-count" id="resultsCount">Loading vacancies...</div>
+
                     <div class="view-toggles">
-                        <button id="btnTableView" class="view-btn active" type="button">
+                        <button id="btnTableView" class="view-btn active" type="button" title="Table View">
                             <i data-lucide="table-2"></i>
                         </button>
-                        <button id="btnCardView" class="view-btn" type="button">
+                        <button id="btnCardView" class="view-btn" type="button" title="Card View">
                             <i data-lucide="layout-grid"></i>
                         </button>
                     </div>
