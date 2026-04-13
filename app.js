@@ -1384,6 +1384,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="application-mode-badge ${getApplicationModeClass(safeMode)}">${escapeHtml(safeMode)}</span>`;
     }
 
+function uniqueSorted(arr) {
+    return [...new Set(arr.map(safe).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b));
+}
+
+function addOptions(selectEl, values) {
+    values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        selectEl.appendChild(option);
+    });
+}
+
+function getFirstNonEmpty(item, keys) {
+    for (const key of keys) {
+        const value = item[key];
+        if (hasMeaningfulValue(value)) {
+            return safe(value);
+        }
+    }
+    return '';
+}
+    
     function escapeHtml(str) {
         return String(str)
             .replaceAll('&', '&amp;')
