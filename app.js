@@ -708,7 +708,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="table-link-cell">
                         ${detailedNotificationLink ? `
                             <a class="table-link-btn" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                Detailed Notification
+                                Notification
                             </a>
                         ` : '—'}
                     </td>
@@ -845,7 +845,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <div class="job-card-footer">
                             ${detailedNotificationLink ? `
                                 <a class="card-action-btn secondary" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                    Detailed Notification
+                                    Notification
                                 </a>
                             ` : ''}
 
@@ -1034,7 +1034,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     ${detailedNotificationLink ? `
                         <a class="card-action-btn secondary" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer">
-                            Detailed Notification
+                            Notification
                         </a>
                     ` : ''}
 
