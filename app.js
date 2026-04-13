@@ -1149,24 +1149,7 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function updateFooterInfo() {
-        if (!footerInfo) return;
-        footerInfo.textContent = lastLoadedAt
-            ? `Last updated: ${formatDateTimeIST(lastLoadedAt)}`
-            : 'Last updated: —';
-    }
-
-    function formatDateTimeIST(dateObj) {
-        try {
-            return new Intl.DateTimeFormat('en-IN', {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-                timeZone: 'Asia/Kolkata'
-            }).format(dateObj) + ' IST';
-        } catch {
-            return dateObj.toLocaleString();
-        }
-    }
+      
 
     function refreshSearchSuggestions(query) {
         if (!searchDatalist) return;
@@ -1398,6 +1381,10 @@ function addOptions(selectEl, values) {
     });
 }
 
+    function hasMeaningfulValue(value) {
+    const text = safe(value).toLowerCase();
+    return Boolean(text) && !['-', '—', 'na', 'n/a', 'null', 'undefined'].includes(text);
+}
 function getFirstNonEmpty(item, keys) {
     for (const key of keys) {
         const value = item[key];
