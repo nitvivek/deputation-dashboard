@@ -46,8 +46,24 @@ document.addEventListener('DOMContentLoaded', () => {
     updateWatchlistUI();
 
     dataContainer.innerHTML = `
-        <div class="empty-state">
-            Loading vacancies from Google Sheet...
+        <div class="loading-shell">
+            <div class="loading-header-skeleton shimmer"></div>
+
+            <div class="loading-kpi-row">
+                <div class="loading-kpi-card shimmer"></div>
+                <div class="loading-kpi-card shimmer"></div>
+                <div class="loading-kpi-card shimmer"></div>
+                <div class="loading-kpi-card shimmer"></div>
+            </div>
+
+            <div class="loading-table-shell">
+                <div class="loading-table-toolbar shimmer"></div>
+                <div class="loading-row shimmer"></div>
+                <div class="loading-row shimmer"></div>
+                <div class="loading-row shimmer"></div>
+                <div class="loading-row shimmer"></div>
+                <div class="loading-row shimmer"></div>
+            </div>
         </div>
     `;
 
@@ -93,12 +109,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 const modalWatchBtn = e.target.closest('[data-modal-action="watchlist"]');
                 if (modalWatchBtn) {
                     const vacancyId = modalWatchBtn.getAttribute('data-id');
-                    const wasSaved = watchlist.has(safe(vacancyId));
+                    const alreadySaved = watchlist.has(safe(vacancyId));
 
                     toggleWatchlist(vacancyId);
                     renderDashboard(false);
 
-                    if (showWatchlistOnly && wasSaved) {
+                    if (!alreadySaved) {
+                        animateBookmarkButton(vacancyId);
+                    }
+
+                    if (showWatchlistOnly && alreadySaved) {
                         closeVacancyModal();
                     } else {
                         openVacancyModal(vacancyId);
@@ -204,8 +224,7 @@ document.addEventListener('DOMContentLoaded', () => {
         dataContainer.addEventListener('click', (e) => {
             const sortBtn = e.target.closest('[data-sort]');
             if (sortBtn) {
-                const key = sortBtn.getAttribute('data-sort');
-                toggleSort(key);
+                toggleSort(sortBtn.getAttribute('data-sort'));
                 return;
             }
 
@@ -240,8 +259,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const vacancyId = cardAction.getAttribute('data-id');
 
                 if (action === 'watchlist') {
+                    const wasSaved = watchlist.has(safe(vacancyId));
                     toggleWatchlist(vacancyId);
                     renderDashboard(false);
+                    if (!wasSaved) animateBookmarkButton(vacancyId);
                 }
                 return;
             }
@@ -252,8 +273,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 const vacancyId = tableAction.getAttribute('data-id');
 
                 if (action === 'watchlist') {
+                    const wasSaved = watchlist.has(safe(vacancyId));
                     toggleWatchlist(vacancyId);
                     renderDashboard(false);
+                    if (!wasSaved) animateBookmarkButton(vacancyId);
                 }
                 return;
             }
@@ -551,16 +574,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
                     <td class="table-heart-cell">
                         <button
-    type="button"
-    class="table-heart-btn ${saved ? 'saved' : ''}"
-    data-table-action="watchlist"
-    data-id="${escapeHtml(vacancyId)}"
-    title="Bookmark the Vacancy"
-    aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
-    aria-pressed="${saved ? 'true' : 'false'}"
->
-    <i data-lucide="heart"></i>
-</button>
+                            type="button"
+                            class="table-heart-btn ${saved ? 'saved' : ''}"
+                            data-table-action="watchlist"
+                            data-id="${escapeHtml(vacancyId)}"
+                            title="Bookmark the Vacancy"
+                            aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
+                            aria-pressed="${saved ? 'true' : 'false'}"
+                        >
+                            <i data-lucide="heart"></i>
+                        </button>
                     </td>
                     <td>
                         <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
@@ -649,17 +672,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <div class="job-card premium-card clickable-card" data-open-details="${escapeHtml(vacancyId)}">
                     <button
-    type="button"
-    class="card-heart-btn ${saved ? 'saved' : ''}"
-    data-card-action="watchlist"
-    data-id="${escapeHtml(vacancyId)}"
-    title="Bookmark the Vacancy"
-    aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
-    aria-pressed="${saved ? 'true' : 'false'}"
-    onclick="event.stopPropagation();"
->
-    <i data-lucide="heart"></i>
-</button>
+                        type="button"
+                        class="card-heart-btn ${saved ? 'saved' : ''}"
+                        data-card-action="watchlist"
+                        data-id="${escapeHtml(vacancyId)}"
+                        title="Bookmark the Vacancy"
+                        aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
+                        aria-pressed="${saved ? 'true' : 'false'}"
+                        onclick="event.stopPropagation();"
+                    >
+                        <i data-lucide="heart"></i>
+                    </button>
 
                     <div class="job-card-top">
                         <div class="job-meta-row">
@@ -988,21 +1011,32 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    ffunction toggleWatchlist(vacancyId) {
-    const id = safe(vacancyId);
-    if (!id) return;
+    function toggleWatchlist(vacancyId) {
+        const id = safe(vacancyId);
+        if (!id) return;
 
-    const wasSaved = watchlist.has(id);
+        if (watchlist.has(id)) {
+            watchlist.delete(id);
+        } else {
+            watchlist.add(id);
+        }
 
-    if (wasSaved) {
-        watchlist.delete(id);
-    } else {
-        watchlist.add(id);
+        persistWatchlist();
+        updateWatchlistUI();
     }
 
-    persistWatchlist();
-    updateWatchlistUI();
-}
+    function animateBookmarkButton(vacancyId) {
+        const safeId = String(vacancyId).replace(/"/g, '\\"');
+        const buttons = document.querySelectorAll(
+            `.card-heart-btn[data-id="${safeId}"], .table-heart-btn[data-id="${safeId}"]`
+        );
+
+        buttons.forEach(btn => {
+            btn.classList.remove('bookmark-pop');
+            void btn.offsetWidth;
+            btn.classList.add('bookmark-pop');
+        });
+    }
 
     function loadWatchlist() {
         try {
