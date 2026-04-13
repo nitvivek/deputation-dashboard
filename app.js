@@ -988,19 +988,21 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-    function toggleWatchlist(vacancyId) {
-        const id = safe(vacancyId);
-        if (!id) return;
+    ffunction toggleWatchlist(vacancyId) {
+    const id = safe(vacancyId);
+    if (!id) return;
 
-        if (watchlist.has(id)) {
-            watchlist.delete(id);
-        } else {
-            watchlist.add(id);
-        }
+    const wasSaved = watchlist.has(id);
 
-        persistWatchlist();
-        updateWatchlistUI();
+    if (wasSaved) {
+        watchlist.delete(id);
+    } else {
+        watchlist.add(id);
     }
+
+    persistWatchlist();
+    updateWatchlistUI();
+}
 
     function loadWatchlist() {
         try {
