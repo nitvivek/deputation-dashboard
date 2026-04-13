@@ -1,21 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Deputation Vacancies</title>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
-        rel="stylesheet"
-    />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
 
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div class="bg-shapes">
@@ -54,12 +51,7 @@
                     <label for="searchPost">Search</label>
                     <div class="input-icon">
                         <i data-lucide="search"></i>
-                        <input
-                            type="text"
-                            id="searchPost"
-                            placeholder="Post, dept, keywords..."
-                            autocomplete="off"
-                        />
+                        <input type="text" id="searchPost" placeholder="Post, dept, keywords...">
                     </div>
                 </div>
 
@@ -104,21 +96,23 @@
             <section class="dashboard-content">
                 <div class="kpi-grid" id="kpiGrid"></div>
                 <div id="activeFilters" class="active-filters"></div>
+                <div id="quickFiltersBar" class="quick-filters-bar"></div>
 
                 <div class="content-toolbar">
                     <div class="results-count" id="resultsCount">Loading vacancies...</div>
 
                     <div class="view-toggles">
-                        <button id="btnTableView" class="view-btn active" type="button" title="Table View">
+                        <button id="btnTableView" class="view-btn active" type="button">
                             <i data-lucide="table-2"></i>
                         </button>
-                        <button id="btnCardView" class="view-btn" type="button" title="Card View">
+                        <button id="btnCardView" class="view-btn" type="button">
                             <i data-lucide="layout-grid"></i>
                         </button>
                     </div>
                 </div>
 
                 <div id="dataContainer" class="data-container view-table"></div>
+                <div id="dashboardFooterInfo" class="dashboard-footer-info"></div>
             </section>
         </main>
     </div>
