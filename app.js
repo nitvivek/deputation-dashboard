@@ -551,15 +551,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
                     <td class="table-heart-cell">
                         <button
-                            type="button"
-                            class="table-heart-btn ${saved ? 'saved' : ''}"
-                            data-table-action="watchlist"
-                            data-id="${escapeHtml(vacancyId)}"
-                            aria-label="${saved ? 'Remove from saved vacancies' : 'Save vacancy'}"
-                            aria-pressed="${saved ? 'true' : 'false'}"
-                        >
-                            <i data-lucide="heart"></i>
-                        </button>
+    type="button"
+    class="table-heart-btn ${saved ? 'saved' : ''}"
+    data-table-action="watchlist"
+    data-id="${escapeHtml(vacancyId)}"
+    title="Bookmark the Vacancy"
+    aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
+    aria-pressed="${saved ? 'true' : 'false'}"
+>
+    <i data-lucide="heart"></i>
+</button>
                     </td>
                     <td>
                         <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
@@ -648,16 +649,17 @@ document.addEventListener('DOMContentLoaded', () => {
             return `
                 <div class="job-card premium-card clickable-card" data-open-details="${escapeHtml(vacancyId)}">
                     <button
-                        type="button"
-                        class="card-heart-btn ${saved ? 'saved' : ''}"
-                        data-card-action="watchlist"
-                        data-id="${escapeHtml(vacancyId)}"
-                        aria-label="${saved ? 'Remove from saved vacancies' : 'Save vacancy'}"
-                        aria-pressed="${saved ? 'true' : 'false'}"
-                        onclick="event.stopPropagation();"
-                    >
-                        <i data-lucide="heart"></i>
-                    </button>
+    type="button"
+    class="card-heart-btn ${saved ? 'saved' : ''}"
+    data-card-action="watchlist"
+    data-id="${escapeHtml(vacancyId)}"
+    title="Bookmark the Vacancy"
+    aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
+    aria-pressed="${saved ? 'true' : 'false'}"
+    onclick="event.stopPropagation();"
+>
+    <i data-lucide="heart"></i>
+</button>
 
                     <div class="job-card-top">
                         <div class="job-meta-row">
