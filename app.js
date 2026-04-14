@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     let rawData = [];
     let currentView = 'table';
-    let lastLoadedAt = null;
 
     let sortState = {
         key: 'Days_Left',
@@ -54,7 +53,6 @@ document.addEventListener('DOMContentLoaded', () => {
     let searchSuggestions = [];
     let searchDatalist = null;
     let quickFiltersBar = null;
-    let footerInfo = null;
 
     initializeEnhancements();
     initializeModal();
@@ -67,14 +65,12 @@ document.addEventListener('DOMContentLoaded', () => {
         skipEmptyLines: true,
         complete(results) {
             rawData = results.data.filter(row => safe(row.Vacancy_ID));
-            reconcileWatchlistWithData();
-            lastLoadedAt = new Date();
 
+            reconcileWatchlistWithData();
             populateFilters();
             buildSearchSuggestions();
             bindEvents();
             updateQuickFiltersBar();
-            updateFooterInfo();
             renderDashboard();
             lucide.createIcons();
         },
@@ -92,7 +88,6 @@ document.addEventListener('DOMContentLoaded', () => {
     function initializeEnhancements() {
         createSearchDatalist();
         createQuickFiltersBar();
-        createFooterInfo();
     }
 
     function createSearchDatalist() {
@@ -115,15 +110,6 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             dashboardContent.appendChild(quickFiltersBar);
         }
-    }
-
-    function createFooterInfo() {
-        if (!dashboardContent) return;
-
-        footerInfo = document.createElement('div');
-        footerInfo.className = 'dashboard-footer-info';
-        footerInfo.id = 'dashboardFooterInfo';
-        dashboardContent.appendChild(footerInfo);
     }
 
     function setLoadingUI() {
@@ -150,6 +136,46 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
+    function initializeModal() {
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeVacancyModal);
+        }
+
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    closeVacancyModal();
+                    return;
+                }
+
+                const modalWatchBtn = e.target.closest('[data-modal-action="watchlist"]');
+                if (!modalWatchBtn) return;
+
+                const vacancyId = modalWatchBtn.getAttribute('data-id');
+                const alreadySaved = watchlist.has(safe(vacancyId));
+
+                toggleWatchlist(vacancyId);
+                renderDashboard(false);
+
+                if (!alreadySaved) {
+                    animateBookmarkButton(vacancyId);
+                }
+
+                if (showWatchlistOnly && alreadySaved) {
+                    closeVacancyModal();
+                } else {
+                    openVacancyModal(vacancyId);
+                }
+            });
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
+                closeVacancyModal();
+            }
+        });
+    }
+
     function populateFilters() {
         filterMyPayLevel.innerHTML = '<option value="">Any Level</option>';
         for (let i = 18; i >= 1; i--) {
@@ -165,9 +191,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const levels = uniqueSorted(rawData.map(i => i.Level_Text));
         const ministries = uniqueSorted(rawData.map(i => i.Ministry));
-        const locations = uniqueSorted(
-            rawData.map(i => formatLocation(i)).filter(Boolean)
-        );
+        const locations = uniqueSorted(rawData.map(i => formatLocation(i)).filter(Boolean));
 
         addOptions(filterLevel, levels);
         addOptions(filterMinistry, ministries);
@@ -186,7 +210,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 item.Location_State
             ].forEach(value => {
                 const text = safe(value);
-                if (text && text.length >= 3) suggestionSet.add(text);
+                if (text && text.length >= 3) {
+                    suggestionSet.add(text);
+                }
             });
         });
 
@@ -358,46 +384,6 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    function initializeModal() {
-        if (closeModalBtn) {
-            closeModalBtn.addEventListener('click', closeVacancyModal);
-        }
-
-        if (modal) {
-            modal.addEventListener('click', (e) => {
-                if (e.target === modal) {
-                    closeVacancyModal();
-                    return;
-                }
-
-                const modalWatchBtn = e.target.closest('[data-modal-action="watchlist"]');
-                if (!modalWatchBtn) return;
-
-                const vacancyId = modalWatchBtn.getAttribute('data-id');
-                const alreadySaved = watchlist.has(safe(vacancyId));
-
-                toggleWatchlist(vacancyId);
-                renderDashboard(false);
-
-                if (!alreadySaved) {
-                    animateBookmarkButton(vacancyId);
-                }
-
-                if (showWatchlistOnly && alreadySaved) {
-                    closeVacancyModal();
-                } else {
-                    openVacancyModal(vacancyId);
-                }
-            });
-        }
-
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && modal && modal.style.display === 'flex') {
-                closeVacancyModal();
-            }
-        });
-    }
-
     function onFilterChange() {
         pagination.currentPage = 1;
         renderDashboard();
@@ -432,7 +418,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderResults(pagedData, filteredData.length, totalPages);
         updateWatchlistUI();
         updateQuickFiltersBar();
-        updateFooterInfo();
 
         const start = filteredData.length === 0
             ? 0
@@ -491,10 +476,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (req1 !== null && req2 !== null) {
                     const minReq = Math.min(req1, req2);
                     const maxReq = Math.max(req1, req2);
-
-                    if (userLevel < minReq || userLevel > maxReq) {
-                        return false;
-                    }
+                    if (userLevel < minReq || userLevel > maxReq) return false;
                 } else if (req1 !== null) {
                     if (userLevel !== req1) return false;
                 } else if (req2 !== null) {
@@ -522,7 +504,8 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         });
     }
-    function sortData(data) {
+
+         function sortData(data) {
         const direction = sortState.direction === 'asc' ? 1 : -1;
         const key = sortState.key;
 
@@ -708,7 +691,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <td class="table-link-cell">
                         ${detailedNotificationLink ? `
                             <a class="table-link-btn" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                Notification
+                                Detailed Notification
                             </a>
                         ` : '—'}
                     </td>
@@ -844,13 +827,25 @@ document.addEventListener('DOMContentLoaded', () => {
                     ${(detailedNotificationLink || applyLink) ? `
                         <div class="job-card-footer">
                             ${detailedNotificationLink ? `
-                                <a class="card-action-btn secondary" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                    Notification
+                                <a
+                                    class="card-action-btn secondary"
+                                    href="${escapeHtml(detailedNotificationLink)}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onclick="event.stopPropagation();"
+                                >
+                                    Detailed Notification
                                 </a>
                             ` : ''}
 
                             ${applyLink ? `
-                                <a class="card-action-btn secondary apply-btn" href="${escapeHtml(applyLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
+                                <a
+                                    class="card-action-btn secondary apply-btn"
+                                    href="${escapeHtml(applyLink)}"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    onclick="event.stopPropagation();"
+                                >
                                     Apply
                                 </a>
                             ` : ''}
@@ -1034,7 +1029,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     ${detailedNotificationLink ? `
                         <a class="card-action-btn secondary" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer">
-                            Notification
+                            Detailed Notification
                         </a>
                     ` : ''}
 
@@ -1149,8 +1144,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
     }
 
-      
-
     function refreshSearchSuggestions(query) {
         if (!searchDatalist) return;
 
@@ -1251,6 +1244,11 @@ document.addEventListener('DOMContentLoaded', () => {
         return value == null ? '' : String(value).trim();
     }
 
+    function hasMeaningfulValue(value) {
+        const text = safe(value).toLowerCase();
+        return Boolean(text) && !['-', '—', 'na', 'n/a', 'null', 'undefined'].includes(text);
+    }
+
     function formatLocation(item) {
         const city = safe(item.Location_City);
         const state = safe(item.Location_State);
@@ -1260,7 +1258,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function parseLevelValue(value) {
         if (value == null) return null;
-
         const str = String(value).trim();
         if (!str) return null;
 
@@ -1367,34 +1364,30 @@ document.addEventListener('DOMContentLoaded', () => {
         return `<span class="application-mode-badge ${getApplicationModeClass(safeMode)}">${escapeHtml(safeMode)}</span>`;
     }
 
-function uniqueSorted(arr) {
-    return [...new Set(arr.map(safe).filter(Boolean))]
-        .sort((a, b) => a.localeCompare(b));
-}
-
-function addOptions(selectEl, values) {
-    values.forEach(value => {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = value;
-        selectEl.appendChild(option);
-    });
-}
-
-    function hasMeaningfulValue(value) {
-    const text = safe(value).toLowerCase();
-    return Boolean(text) && !['-', '—', 'na', 'n/a', 'null', 'undefined'].includes(text);
-}
-function getFirstNonEmpty(item, keys) {
-    for (const key of keys) {
-        const value = item[key];
-        if (hasMeaningfulValue(value)) {
-            return safe(value);
-        }
+    function uniqueSorted(arr) {
+        return [...new Set(arr.map(safe).filter(Boolean))]
+            .sort((a, b) => a.localeCompare(b));
     }
-    return '';
-}
-    
+
+    function addOptions(selectEl, values) {
+        values.forEach(value => {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = value;
+            selectEl.appendChild(option);
+        });
+    }
+
+    function getFirstNonEmpty(item, keys) {
+        for (const key of keys) {
+            const value = item[key];
+            if (hasMeaningfulValue(value)) {
+                return safe(value);
+            }
+        }
+        return '';
+    }
+
     function escapeHtml(str) {
         return String(str)
             .replaceAll('&', '&amp;')
@@ -1403,5 +1396,4 @@ function getFirstNonEmpty(item, keys) {
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
     }
-});
-                          
+});                     
