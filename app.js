@@ -98,19 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createQuickFiltersBar() {
-        if (!dashboardContent) return;
-
-        quickFiltersBar = document.createElement('div');
-        quickFiltersBar.className = 'quick-filters-bar';
-        quickFiltersBar.id = 'quickFiltersBar';
-
-        const toolbar = dashboardContent.querySelector('.content-toolbar');
-        if (toolbar) {
-            dashboardContent.insertBefore(quickFiltersBar, toolbar);
-        } else {
-            dashboardContent.appendChild(quickFiltersBar);
-        }
-    }
+    quickFiltersBar = document.getElementById('quickFiltersBar');
+}
 
     function setLoadingUI() {
         dataContainer.innerHTML = `
