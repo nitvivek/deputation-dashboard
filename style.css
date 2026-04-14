@@ -1567,3 +1567,109 @@ select:focus {
         font-size: 0.78rem;
     }
 }
+
+/* =========================
+   MOBILE TABLE -> STACKED MINI CARDS
+   ========================= */
+
+.table-subtext {
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+    .table-wrapper {
+        overflow: visible;
+        background: transparent;
+        border: none;
+        box-shadow: none;
+    }
+
+    .responsive-table {
+        min-width: 0;
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .responsive-table thead {
+        display: none;
+    }
+
+    .responsive-table tbody {
+        display: block;
+    }
+
+    .responsive-table tr {
+        display: block;
+        background: var(--bg-surface);
+        border: 1px solid var(--border-color);
+        border-radius: var(--radius-lg);
+        box-shadow: var(--shadow-glass);
+        margin-bottom: 1rem;
+        padding: 0.5rem 0;
+        overflow: hidden;
+    }
+
+    .responsive-table td {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+        width: 100%;
+        padding: 0.8rem 1rem;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.08);
+        white-space: normal;
+    }
+
+    .responsive-table td:last-child {
+        border-bottom: none;
+    }
+
+    .responsive-table td::before {
+        content: attr(data-label);
+        flex: 0 0 42%;
+        max-width: 42%;
+        color: var(--text-muted);
+        font-size: 0.76rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        line-height: 1.35;
+    }
+
+    .responsive-table td > * {
+        max-width: 58%;
+    }
+
+    .responsive-table td.table-heart-cell {
+        justify-content: flex-start;
+        align-items: center;
+    }
+
+    .responsive-table td.table-heart-cell::before {
+        content: attr(data-label);
+        flex: 0 0 auto;
+        max-width: none;
+        margin-right: 0.75rem;
+    }
+
+    .responsive-table td.table-heart-cell > * {
+        max-width: none;
+    }
+
+    .responsive-table td .badge,
+    .responsive-table td .table-link-btn {
+        max-width: 100%;
+    }
+
+    .responsive-table td strong {
+        display: block;
+        line-height: 1.35;
+    }
+
+    .responsive-table td[data-label="Post Name"] {
+        align-items: flex-start;
+    }
+}
