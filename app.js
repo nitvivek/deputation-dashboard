@@ -73,6 +73,7 @@ document.addEventListener('DOMContentLoaded', () => {
             buildSearchSuggestions();
             bindEvents();
             updateQuickFiltersBar();
+            applyMobileDefaultView();
             renderDashboard();
             lucide.createIcons();
         },
@@ -231,6 +232,8 @@ document.addEventListener('DOMContentLoaded', () => {
             refreshSearchSuggestions(searchPost.value);
         });
 
+
+        
         if (quickFiltersBar) {
             quickFiltersBar.addEventListener('click', (e) => {
                 const btn = e.target.closest('[data-quick-filter]');
@@ -304,6 +307,15 @@ document.addEventListener('DOMContentLoaded', () => {
             renderDashboard();
         });
 
+window.addEventListener('resize', () => {
+    if (window.innerWidth <= 768 && currentView !== 'card') {
+        currentView = 'card';
+        btnCardView.classList.add('active');
+        btnTableView.classList.remove('active');
+        renderDashboard(false);
+    }
+});
+        
         dataContainer.addEventListener('click', (e) => {
             const sortBtn = e.target.closest('[data-sort]');
             if (sortBtn) {
@@ -423,6 +435,14 @@ document.addEventListener('DOMContentLoaded', () => {
         lucide.createIcons();
     }
 
+function applyMobileDefaultView() {
+    if (window.innerWidth <= 768) {
+        currentView = 'card';
+        btnCardView.classList.add('active');
+        btnTableView.classList.remove('active');
+    }
+}
+    
     function getFilteredData() {
         const search = searchPost.value.trim().toLowerCase();
         const myPayLevel = filterMyPayLevel.value;
