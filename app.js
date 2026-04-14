@@ -216,22 +216,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function bindEvents() {
-        [
-            searchPost,
-            filterMyPayLevel,
-            filterLevel,
-            filterMinistry,
-            filterLocation,
-            filterStatus
-        ].forEach(el => {
-            el.addEventListener('input', onFilterChange);
-            el.addEventListener('change', onFilterChange);
-        });
+       /* Search box */
+searchPost.addEventListener('input', () => {
+    refreshSearchSuggestions(searchPost.value);
+    onFilterChange();
+});
 
-        searchPost.addEventListener('input', () => {
-            refreshSearchSuggestions(searchPost.value);
-        });
-
+/* Dropdown filters */
+[
+    filterMyPayLevel,
+    filterLevel,
+    filterMinistry,
+    filterLocation,
+    filterStatus
+].forEach(el => {
+    el.addEventListener('change', onFilterChange);
+});
 
         
         if (quickFiltersBar) {
