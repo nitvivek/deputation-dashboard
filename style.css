@@ -363,6 +363,37 @@ select:focus {
     animation: kpiPulse 3s infinite;
 }
 
+/* =========================
+   KPI ICON STYLE
+   ========================= */
+
+.kpi-icon {
+    margin-bottom: 0.5rem;
+    display: flex;
+    justify-content: center;
+}
+
+.kpi-icon svg {
+    width: 26px;
+    height: 26px;
+    color: var(--primary-color);
+
+    /* glow effect */
+    filter:
+        drop-shadow(0 0 6px rgba(34, 211, 238, 0.35))
+        drop-shadow(0 0 12px rgba(34, 211, 238, 0.15));
+
+    transition: all 0.3s ease;
+}
+
+/* hover enhancement */
+.kpi-card:hover .kpi-icon svg {
+    transform: scale(1.15);
+    filter:
+        drop-shadow(0 0 10px rgba(34, 211, 238, 0.5))
+        drop-shadow(0 0 18px rgba(34, 211, 238, 0.25));
+}
+
 /* TOOLBAR */
 .top-toolbar {
     margin-bottom: 1rem;
