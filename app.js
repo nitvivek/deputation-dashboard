@@ -702,89 +702,106 @@ function animateKpiCounters() {
         `;
     }
 
-    function renderTable(data) {
-        const rows = data.map(item => {
-            const vacancyId = safe(item.Vacancy_ID);
-            const saved = watchlist.has(vacancyId);
-            const daysLeft = parseInt(item.Days_Left, 10);
-            const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
-            const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
-            const applyLink = normalizeUrl(safe(item.Application_Form_Link));
-
-            return `
-                <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
-                    <td class="table-heart-cell">
-                        <button
-                            type="button"
-                            class="table-heart-btn ${saved ? 'saved' : ''}"
-                            data-table-action="watchlist"
-                            data-id="${escapeHtml(vacancyId)}"
-                            title="Bookmark the Vacancy"
-                            aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
-                            aria-pressed="${saved ? 'true' : 'false'}"
-                        >
-                            <i data-lucide="heart"></i>
-                        </button>
-                    </td>
-                    <td>
-                        <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
-                        <div style="margin-top:6px;color:var(--text-secondary);font-size:0.85rem;">
-                            ${escapeHtml(safe(item.Department_Organisation) || '')}
-                        </div>
-                    </td>
-                    <td>${escapeHtml(safe(item.Level_Text) || '—')}</td>
-                    <td>${escapeHtml(formatEligibility(item))}</td>
-                    <td>${escapeHtml(safe(item.Ministry) || '—')}</td>
-                    <td>${escapeHtml(formatLocation(item) || '—')}</td>
-                    <td class="days-left ${closingSoon ? 'closing' : ''}">
-                        ${escapeHtml(formatDaysLeft(daysLeft))}
-                    </td>
-                    <td>
-                        <span class="badge ${safe(item.Status) === 'Active' ? 'badge-active' : ''}">
-                            ${escapeHtml(safe(item.Status) || '—')}
-                        </span>
-                    </td>
-                    <td class="table-link-cell">
-                        ${detailedNotificationLink ? `
-                            <a class="table-link-btn" href="${escapeHtml(detailedNotificationLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                Detailed Notification
-                            </a>
-                        ` : '—'}
-                    </td>
-                    <td class="table-link-cell">
-                        ${applyLink ? `
-                            <a class="table-link-btn apply" href="${escapeHtml(applyLink)}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation();">
-                                Apply
-                            </a>
-                        ` : '—'}
-                    </td>
-                </tr>
-            `;
-        }).join('');
+   function renderTable(data) {
+    const rows = data.map(item => {
+        const vacancyId = safe(item.Vacancy_ID);
+        const saved = watchlist.has(vacancyId);
+        const daysLeft = parseInt(item.Days_Left, 10);
+        const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
+        const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
+        const applyLink = normalizeUrl(safe(item.Application_Form_Link));
 
         return `
-            <div class="table-wrapper">
-                <table class="data-table">
-                    <thead>
-                        <tr>
-                            <th>Save</th>
-                            ${renderSortableHeader('Post Name', 'Post_Name')}
-                            ${renderSortableHeader('Level', 'Level_Text')}
-                            ${renderSortableHeader('Eligibility', 'Eligibility')}
-                            ${renderSortableHeader('Ministry', 'Ministry')}
-                            ${renderSortableHeader('Location', 'Location')}
-                            ${renderSortableHeader('Days Left', 'Days_Left')}
-                            ${renderSortableHeader('Status', 'Status')}
-                            <th>Notification</th>
-                            <th>Apply</th>
-                        </tr>
-                    </thead>
-                    <tbody>${rows}</tbody>
-                </table>
-            </div>
-        `;
-    }
+            <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
+                <td class="table-heart-cell" data-label="Save">
+                    <button
+                        type="button"
+                        class="table-heart-btn ${saved ? 'saved' : ''}"
+                        data-table-action="watchlist"
+                        data-id="${escapeHtml(vacancyId)}"
+                        title="Bookmark the Vacancy"
+                        aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
+                        aria-pressed="${saved ? 'true' : 'false'}"
+                    >
+                        <i data-lucide="heart"></i>
+                    </button>
+                </td>
 
+                <td data-label="Post Name">
+                    <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
+                    <div class="table-subtext">
+                        ${escapeHtml(safe(item.Department_Organisation) || '')}
+                    </div>
+                </td>
+
+                <td data-label="Level">${escapeHtml(safe(item.Level_Text) || '—')}</td>
+                <td data-label="Eligibility">${escapeHtml(formatEligibility(item))}</td>
+                <td data-label="Ministry">${escapeHtml(safe(item.Ministry) || '—')}</td>
+                <td data-label="Location">${escapeHtml(formatLocation(item) || '—')}</td>
+
+                <td data-label="Days Left" class="days-left ${closingSoon ? 'closing' : ''}">
+                    ${escapeHtml(formatDaysLeft(daysLeft))}
+                </td>
+
+                <td data-label="Status">
+                    <span class="badge ${safe(item.Status) === 'Active' ? 'badge-active' : ''}">
+                        ${escapeHtml(safe(item.Status) || '—')}
+                    </span>
+                </td>
+
+                <td data-label="Notification" class="table-link-cell">
+                    ${detailedNotificationLink ? `
+                        <a
+                            class="table-link-btn"
+                            href="${escapeHtml(detailedNotificationLink)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onclick="event.stopPropagation();"
+                        >
+                            Detailed Notification
+                        </a>
+                    ` : '—'}
+                </td>
+
+                <td data-label="Apply" class="table-link-cell">
+                    ${applyLink ? `
+                        <a
+                            class="table-link-btn apply"
+                            href="${escapeHtml(applyLink)}"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            onclick="event.stopPropagation();"
+                        >
+                            Apply
+                        </a>
+                    ` : '—'}
+                </td>
+            </tr>
+        `;
+    }).join('');
+
+    return `
+        <div class="table-wrapper">
+            <table class="data-table responsive-table">
+                <thead>
+                    <tr>
+                        <th>Save</th>
+                        ${renderSortableHeader('Post Name', 'Post_Name')}
+                        ${renderSortableHeader('Level', 'Level_Text')}
+                        ${renderSortableHeader('Eligibility', 'Eligibility')}
+                        ${renderSortableHeader('Ministry', 'Ministry')}
+                        ${renderSortableHeader('Location', 'Location')}
+                        ${renderSortableHeader('Days Left', 'Days_Left')}
+                        ${renderSortableHeader('Status', 'Status')}
+                        <th>Notification</th>
+                        <th>Apply</th>
+                    </tr>
+                </thead>
+                <tbody>${rows}</tbody>
+            </table>
+        </div>
+    `;
+}
     function renderSortableHeader(label, key) {
         const active = sortState.key === key;
         const dir = sortState.direction === 'asc' ? '↑' : '↓';
