@@ -29,6 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBody = document.getElementById('modalBody');
 
     let previousKpiSnapshot = null;
+   
 
     let rawData = [];
     let currentView = 'table';
@@ -217,7 +218,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function bindEvents() {
        /* Search box */
-searchPost.addEventListener('input', () => {
+        searchPost.addEventListener('input', () => {
     refreshSearchSuggestions(searchPost.value);
     onFilterChange();
 });
@@ -574,8 +575,8 @@ function applyMobileDefaultView() {
         return data.slice(start, end);
     }
 
-    function renderKPIs(filteredData) {
-    const current = {
+function getKpiSnapshot(filteredData) {
+    return {
         total: filteredData.length,
         active: filteredData.filter(d => safe(d.Status) === 'Active').length,
         closingSoon: filteredData.filter(d => {
@@ -586,21 +587,9 @@ function applyMobileDefaultView() {
             filteredData.map(d => safe(d.Ministry)).filter(Boolean)
         ).size
     };
-
-    const previous = previousKpiSnapshot || current;
-
-    kpiGrid.innerHTML = `
-        ${buildKpiCard('Total Vacancies', current.total, 'briefcase', 'cyan', current.total - previous.total)}
-        ${buildKpiCard('Active', current.active, 'check-circle-2', 'green', current.active - previous.active)}
-        ${buildKpiCard('Closing Soon', current.closingSoon, 'clock-3', 'red', current.closingSoon - previous.closingSoon)}
-        ${buildKpiCard('Ministries', current.ministries, 'building-2', 'purple', current.ministries - previous.ministries)}
-    `;
-
-    animateKpiCounters();
-    previousKpiSnapshot = current;
 }
-
-function buildKpiCard(title, value, icon, tone, delta) {
+    
+    function buildKpiCard(title, value, icon, tone, delta) {
     const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
     const trendSymbol = delta > 0 ? '↑' : delta < 0 ? '↓' : '•';
     const trendText = delta === 0 ? 'No change' : `${trendSymbol} ${Math.abs(delta)}`;
@@ -621,6 +610,7 @@ function buildKpiCard(title, value, icon, tone, delta) {
         </div>
     `;
 }
+
 
 function animateKpiCounters() {
     const counters = kpiGrid.querySelectorAll('.kpi-value[data-count]');
@@ -647,6 +637,8 @@ function animateKpiCounters() {
         requestAnimationFrame(update);
     });
 }
+
+    
     function updateWatchlistUI() {
         favCount.textContent = String(watchlist.size || 0);
         favBtn.classList.toggle('active', showWatchlistOnly);
