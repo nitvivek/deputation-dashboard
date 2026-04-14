@@ -553,33 +553,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderKPIs(filteredData) {
-        const active = filteredData.filter(d => safe(d.Status) === 'Active').length;
-        const closingSoon = filteredData.filter(d => {
-            const days = parseInt(d.Days_Left, 10);
-            return !Number.isNaN(days) && days >= 0 && days <= 15;
-        }).length;
-        const ministries = new Set(filteredData.map(d => safe(d.Ministry)).filter(Boolean)).size;
+    const active = filteredData.filter(d => safe(d.Status) === 'Active').length;
 
-        kpiGrid.innerHTML = `
-            <div class="kpi-card">
-                <div class="kpi-title">Total Vacancies</div>
-                <div class="kpi-value">${filteredData.length}</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Active</div>
-                <div class="kpi-value">${active}</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Closing Soon</div>
-                <div class="kpi-value">${closingSoon}</div>
-            </div>
-            <div class="kpi-card">
-                <div class="kpi-title">Ministries</div>
-                <div class="kpi-value">${ministries}</div>
-            </div>
-        `;
-    }
+    const closingSoon = filteredData.filter(d => {
+        const days = parseInt(d.Days_Left, 10);
+        return !Number.isNaN(days) && days >= 0 && days <= 15;
+    }).length;
 
+    const ministries = new Set(
+        filteredData.map(d => safe(d.Ministry)).filter(Boolean)
+    ).size;
+
+    kpiGrid.innerHTML = `
+        ${buildKpi("Total Vacancies", filteredData.length, "briefcase")}
+        ${buildKpi("Active", active, "check-circle")}
+        ${buildKpi("Closing Soon", closingSoon, "clock")}
+        ${buildKpi("Ministries", ministries, "building-2")}
+    `;
+
+    lucide.createIcons();
+}
+
+function buildKpi(title, value, icon) {
+    return `
+        <div class="kpi-card">
+            <div class="kpi-icon">
+                <i data-lucide="${icon}"></i>
+            </div>
+            <div class="kpi-title">${title}</div>
+            <div class="kpi-value">${value}</div>
+        </div>
+    `;
+}
     function updateWatchlistUI() {
         favCount.textContent = String(watchlist.size || 0);
         favBtn.classList.toggle('active', showWatchlistOnly);
