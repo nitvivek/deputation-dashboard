@@ -28,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const closeModalBtn = document.getElementById('closeModal');
     const modalBody = document.getElementById('modalBody');
 
+    let previousKpiSnapshot = null;
+
     let rawData = [];
     let currentView = 'table';
 
@@ -553,37 +555,77 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function renderKPIs(filteredData) {
-    const active = filteredData.filter(d => safe(d.Status) === 'Active').length;
+    const current = {
+        total: filteredData.length,
+        active: filteredData.filter(d => safe(d.Status) === 'Active').length,
+        closingSoon: filteredData.filter(d => {
+            const days = parseInt(d.Days_Left, 10);
+            return !Number.isNaN(days) && days >= 0 && days <= 15;
+        }).length,
+        ministries: new Set(
+            filteredData.map(d => safe(d.Ministry)).filter(Boolean)
+        ).size
+    };
 
-    const closingSoon = filteredData.filter(d => {
-        const days = parseInt(d.Days_Left, 10);
-        return !Number.isNaN(days) && days >= 0 && days <= 15;
-    }).length;
-
-    const ministries = new Set(
-        filteredData.map(d => safe(d.Ministry)).filter(Boolean)
-    ).size;
+    const previous = previousKpiSnapshot || current;
 
     kpiGrid.innerHTML = `
-        ${buildKpi("Total Vacancies", filteredData.length, "briefcase")}
-        ${buildKpi("Active", active, "check-circle")}
-        ${buildKpi("Closing Soon", closingSoon, "clock")}
-        ${buildKpi("Ministries", ministries, "building-2")}
+        ${buildKpiCard('Total Vacancies', current.total, 'briefcase', 'cyan', current.total - previous.total)}
+        ${buildKpiCard('Active', current.active, 'check-circle-2', 'green', current.active - previous.active)}
+        ${buildKpiCard('Closing Soon', current.closingSoon, 'clock-3', 'red', current.closingSoon - previous.closingSoon)}
+        ${buildKpiCard('Ministries', current.ministries, 'building-2', 'purple', current.ministries - previous.ministries)}
     `;
 
-    lucide.createIcons();
+    animateKpiCounters();
+    previousKpiSnapshot = current;
 }
 
-function buildKpi(title, value, icon) {
+function buildKpiCard(title, value, icon, tone, delta) {
+    const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+    const trendSymbol = delta > 0 ? '↑' : delta < 0 ? '↓' : '•';
+    const trendText = delta === 0 ? 'No change' : `${trendSymbol} ${Math.abs(delta)}`;
+
     return `
-        <div class="kpi-card">
+        <div class="kpi-card kpi-${tone}">
             <div class="kpi-icon">
                 <i data-lucide="${icon}"></i>
             </div>
+
             <div class="kpi-title">${title}</div>
-            <div class="kpi-value">${value}</div>
+
+            <div class="kpi-value" data-count="${value}">0</div>
+
+            <div class="kpi-trend ${trendClass}">
+                ${trendText}
+            </div>
         </div>
     `;
+}
+
+function animateKpiCounters() {
+    const counters = kpiGrid.querySelectorAll('.kpi-value[data-count]');
+
+    counters.forEach(counter => {
+        const target = Number(counter.getAttribute('data-count')) || 0;
+        const duration = 700;
+        const startTime = performance.now();
+
+        function update(now) {
+            const progress = Math.min((now - startTime) / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3);
+            const currentValue = Math.round(target * eased);
+
+            counter.textContent = currentValue.toLocaleString();
+
+            if (progress < 1) {
+                requestAnimationFrame(update);
+            } else {
+                counter.textContent = target.toLocaleString();
+            }
+        }
+
+        requestAnimationFrame(update);
+    });
 }
     function updateWatchlistUI() {
         favCount.textContent = String(watchlist.size || 0);
