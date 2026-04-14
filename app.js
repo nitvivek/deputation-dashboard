@@ -588,7 +588,25 @@ function getKpiSnapshot(filteredData) {
         ).size
     };
 }
-    
+    function renderKPIs(filteredData) {
+    const current = getKpiSnapshot(filteredData);
+    const previous = previousKpiSnapshot;
+
+    const totalDelta = previous ? current.total - previous.total : 0;
+    const activeDelta = previous ? current.active - previous.active : 0;
+    const closingSoonDelta = previous ? current.closingSoon - previous.closingSoon : 0;
+    const ministriesDelta = previous ? current.ministries - previous.ministries : 0;
+
+    kpiGrid.innerHTML = `
+        ${buildKpiCard('Total Vacancies', current.total, 'briefcase', 'cyan', totalDelta)}
+        ${buildKpiCard('Active', current.active, 'check-circle-2', 'green', activeDelta)}
+        ${buildKpiCard('Closing Soon', current.closingSoon, 'clock-3', 'red', closingSoonDelta)}
+        ${buildKpiCard('Ministries', current.ministries, 'building-2', 'purple', ministriesDelta)}
+    `;
+
+    animateKpiCounters();
+    previousKpiSnapshot = current;
+}
     function buildKpiCard(title, value, icon, tone, delta) {
     const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
     const trendSymbol = delta > 0 ? '↑' : delta < 0 ? '↓' : '•';
