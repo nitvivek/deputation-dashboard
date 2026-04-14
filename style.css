@@ -1111,13 +1111,11 @@ select:focus {
    FINAL HEART BUTTON STYLES
    ========================= */
 
-/* cell alignment for table heart */
 .table-heart-cell {
     width: 64px;
     text-align: center;
 }
 
-/* card needs relative positioning for top-right heart */
 .premium-card {
     position: relative;
 }
@@ -1126,7 +1124,6 @@ select:focus {
     padding-right: 3.2rem;
 }
 
-/* base button look */
 .table-heart-btn,
 .card-heart-btn {
     position: relative;
@@ -1145,13 +1142,11 @@ select:focus {
         0 6px 16px rgba(0,0,0,0.18);
 }
 
-/* table size */
 .table-heart-btn {
     width: 36px;
     height: 36px;
 }
 
-/* card size + placement */
 .card-heart-btn {
     position: absolute;
     top: 14px;
@@ -1161,27 +1156,18 @@ select:focus {
     z-index: 5;
 }
 
-/* icon default */
-.table-heart-btn i,
-.card-heart-btn i {
-    fill: transparent;
+/* lucide renders svg, so target svg directly */
+.table-heart-btn svg,
+.card-heart-btn svg {
+    width: 18px;
+    height: 18px;
     stroke: rgba(255, 255, 255, 0.96);
     stroke-width: 2.1;
-    transition: transform 0.22s ease, fill 0.22s ease, stroke 0.22s ease, filter 0.22s ease;
+    fill: none;
+    transition: transform 0.22s ease, filter 0.22s ease;
     filter: drop-shadow(0 1px 1px rgba(0,0,0,0.18));
 }
 
-.table-heart-btn i {
-    width: 16px;
-    height: 16px;
-}
-
-.card-heart-btn i {
-    width: 18px;
-    height: 18px;
-}
-
-/* hover */
 .table-heart-btn:hover,
 .card-heart-btn:hover {
     transform: translateY(-1px) scale(1.06);
@@ -1193,18 +1179,17 @@ select:focus {
         0 0 0 4px rgba(255,255,255,0.04);
 }
 
-.table-heart-btn:hover i,
-.card-heart-btn:hover i {
+.table-heart-btn:hover svg,
+.card-heart-btn:hover svg {
     transform: scale(1.06);
 }
 
-/* active press */
 .table-heart-btn:active,
 .card-heart-btn:active {
     transform: translateY(0) scale(0.98);
 }
 
-/* saved state: only heart turns red, outer ring stays light */
+/* saved state: outer ring unchanged */
 .table-heart-btn.saved,
 .card-heart-btn.saved {
     border-color: rgba(255, 255, 255, 0.85);
@@ -1215,13 +1200,18 @@ select:focus {
         0 6px 16px rgba(0,0,0,0.18);
 }
 
-.table-heart-btn.saved i,
-.card-heart-btn.saved i {
-    fill: #ff334f;
-    stroke: rgba(255,255,255,0.98);
+/* only inner heart becomes red */
+.table-heart-btn.saved svg,
+.card-heart-btn.saved svg {
     filter:
         drop-shadow(0 1px 2px rgba(120, 12, 35, 0.35))
         drop-shadow(0 0 4px rgba(255, 51, 79, 0.22));
+}
+
+.table-heart-btn.saved svg path,
+.card-heart-btn.saved svg path {
+    fill: #ff334f !important;
+    stroke: rgba(255,255,255,0.98) !important;
 }
 
 .table-heart-btn.saved:hover,
@@ -1239,21 +1229,11 @@ select:focus {
    ========================= */
 
 @keyframes bookmarkPop {
-    0% {
-        transform: scale(1);
-    }
-    22% {
-        transform: scale(1.16);
-    }
-    42% {
-        transform: scale(0.96);
-    }
-    65% {
-        transform: scale(1.06);
-    }
-    100% {
-        transform: scale(1);
-    }
+    0% { transform: scale(1); }
+    22% { transform: scale(1.16); }
+    42% { transform: scale(0.96); }
+    65% { transform: scale(1.06); }
+    100% { transform: scale(1); }
 }
 
 @keyframes heartGlowPulse {
@@ -1278,8 +1258,8 @@ select:focus {
     animation: bookmarkPop 360ms cubic-bezier(0.2, 0.9, 0.2, 1);
 }
 
-.table-heart-btn.saved.bookmark-pop i,
-.card-heart-btn.saved.bookmark-pop i {
+.table-heart-btn.saved.bookmark-pop svg,
+.card-heart-btn.saved.bookmark-pop svg {
     animation: heartGlowPulse 520ms ease-out;
 }
 
