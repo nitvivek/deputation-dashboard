@@ -536,6 +536,7 @@ select:focus {
 /* DATA CONTAINER */
 .data-container {
     min-height: 400px;
+    -webkit-overflow-scrolling: touch;
 }
 
 .view-table .cards-grid {
@@ -556,6 +557,8 @@ select:focus {
     border-radius: var(--radius-lg);
     border: 1px solid var(--border-color);
     overflow: auto;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-x pan-y;
 }
 
 .data-table {
@@ -635,6 +638,12 @@ select:focus {
     border-color: rgba(34, 197, 94, 0.24);
     background: rgba(34, 197, 94, 0.08);
     color: var(--success-color);
+}
+
+.table-subtext {
+    margin-top: 6px;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
 }
 
 /* CARDS */
@@ -1268,316 +1277,7 @@ select:focus {
     }
 }
 
-/* RESPONSIVE */
-@media (max-width: 1200px) {
-    .toolbar-line {
-        flex-wrap: wrap;
-    }
-
-    .active-filters {
-        flex: 1 1 100%;
-        order: 2;
-    }
-
-    .quick-filters-bar {
-        order: 3;
-        width: 100%;
-        justify-content: flex-start;
-    }
-
-    .view-toggles {
-        margin-left: 0;
-        order: 4;
-    }
-}
-
-@media (max-width: 1100px) {
-    .main-layout {
-        grid-template-columns: 1fr;
-    }
-
-    .filters-sidebar {
-        position: static;
-    }
-}
-
-@media (max-width: 900px) {
-    .toolbar-line {
-        display: grid;
-        grid-template-columns: 1fr auto;
-        grid-template-areas:
-            "filters filters"
-            "results views";
-        align-items: start;
-        gap: 0.9rem 1rem;
-    }
-
-    .active-filters {
-        grid-area: filters;
-        min-width: 0;
-        flex: unset;
-    }
-
-    .quick-filters-bar {
-        grid-area: filters;
-        width: 100%;
-        justify-content: flex-start;
-        margin-top: 0.35rem;
-    }
-
-    .results-count {
-        grid-area: results;
-        align-self: center;
-    }
-
-    .view-toggles {
-        grid-area: views;
-        margin-left: 0;
-        justify-self: end;
-        align-self: center;
-    }
-}
-
-@media (max-width: 768px) {
-    .premium-details,
-    .job-highlight-row,
-    .modal-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .job-card-footer,
-    .pagination-bar,
-    .modal-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .card-action-btn {
-        width: 100%;
-    }
-
-    .vacancy-modal-header {
-        flex-direction: column;
-        padding-right: 0;
-    }
-
-    .modal-chip-row {
-        justify-content: flex-start;
-    }
-
-    .loading-kpi-row {
-        grid-template-columns: 1fr;
-    }
-
-    .cards-grid {
-        grid-template-columns: 1fr;
-    }
-}
-
-@media (max-width: 640px) {
-    .app-container {
-        padding: 1rem;
-    }
-
-    .app-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 1rem;
-    }
-
-    .toolbar-line {
-        padding: 0.9rem 1rem;
-    }
-
-    .active-filters,
-    .quick-filters-bar {
-        width: 100%;
-    }
-
-    .modal-content {
-        padding: 1.25rem;
-    }
-
-    .vacancy-modal-title {
-        font-size: 1.45rem;
-    }
-}
-
-/* =========================
-   MOBILE IMPROVEMENTS
-   ========================= */
-
-/* allow inner containers to scroll properly on touch */
-.data-container,
-.table-wrapper {
-    -webkit-overflow-scrolling: touch;
-}
-
-/* make table horizontally swipeable */
-.table-wrapper {
-    overflow-x: auto;
-    overflow-y: auto;
-    touch-action: pan-x pan-y;
-}
-
-/* keep table readable; swipe instead of squashing */
-.data-table {
-    min-width: 980px;
-}
-
-/* avoid clipping of horizontal table scroll on mobile */
-@media (max-width: 768px) {
-    body {
-        overflow-x: hidden;
-    }
-
-    .app-container {
-        padding: 0.75rem;
-    }
-
-    .main-layout {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-    }
-
-    .filters-sidebar {
-        position: static;
-        width: 100%;
-        padding: 1rem;
-    }
-
-    .dashboard-content {
-        min-width: 0;
-    }
-
-    .data-container {
-        overflow-x: auto;
-        overflow-y: visible;
-    }
-
-    .table-wrapper {
-        width: 100%;
-        max-width: 100%;
-        border-radius: 14px;
-    }
-
-    .data-table th,
-    .data-table td {
-        padding: 0.8rem;
-        white-space: nowrap;
-    }
-
-    /* cards become primary mobile experience */
-    .cards-grid {
-        grid-template-columns: 1fr !important;
-        gap: 1rem;
-    }
-
-    .job-card {
-        padding: 1rem;
-    }
-
-    .job-card-top {
-        padding-right: 2.8rem;
-    }
-
-    .job-title {
-        font-size: 1.2rem;
-    }
-
-    .premium-details,
-    .job-highlight-row,
-    .modal-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .job-card-footer,
-    .pagination-bar,
-    .modal-actions {
-        flex-direction: column;
-        align-items: stretch;
-    }
-
-    .card-action-btn {
-        width: 100%;
-    }
-
-    .vacancy-modal-header {
-        flex-direction: column;
-        padding-right: 0;
-    }
-
-    .modal-chip-row {
-        justify-content: flex-start;
-    }
-
-    .toolbar-line {
-        display: grid;
-        grid-template-columns: 1fr;
-        gap: 0.8rem;
-        align-items: stretch;
-    }
-
-    .results-count {
-        order: 2;
-    }
-
-    .active-filters {
-        order: 1;
-        width: 100%;
-    }
-
-    .quick-filters-bar {
-        order: 3;
-        width: 100%;
-        justify-content: flex-start;
-    }
-
-    .view-toggles {
-        order: 4;
-        margin-left: 0;
-        justify-content: flex-end;
-    }
-
-    .kpi-grid {
-        grid-template-columns: 1fr 1fr;
-    }
-}
-
-@media (max-width: 520px) {
-    .kpi-grid {
-        grid-template-columns: 1fr;
-    }
-
-    .header-logo h1 {
-        font-size: 1.2rem;
-    }
-
-    .modal-content {
-        width: 96%;
-        padding: 1rem;
-    }
-
-    .vacancy-modal-title {
-        font-size: 1.25rem;
-    }
-
-    .quick-pill,
-    .filter-chip {
-        font-size: 0.78rem;
-    }
-}
-
-/* =========================
-   MOBILE TABLE -> STACKED MINI CARDS
-   ========================= */
-
-.table-subtext {
-    margin-top: 6px;
-    color: var(--text-secondary);
-    font-size: 0.85rem;
-}
-
+/* MOBILE TABLE -> STACKED CARDS */
 @media (max-width: 768px) {
     .table-wrapper {
         overflow: visible;
@@ -1658,36 +1358,227 @@ select:focus {
     .responsive-table td.table-heart-cell > * {
         max-width: none;
     }
+}
 
-    .responsive-table td .badge,
-    .responsive-table td .table-link-btn {
-        max-width: 100%;
+/* RESPONSIVE */
+@media (max-width: 1200px) {
+    .toolbar-line {
+        flex-wrap: wrap;
     }
 
-    .responsive-table td strong {
-        display: block;
-        line-height: 1.35;
+    .active-filters {
+        flex: 1 1 100%;
+        order: 2;
     }
 
-    .responsive-table td[data-label="Post Name"] {
-        align-items: flex-start;
+    .quick-filters-bar {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .view-toggles {
+        margin-left: 0;
+        order: 4;
     }
 }
 
-/* =========================
-   MOBILE FILTER ACCORDION — PROFESSIONAL VERSION
-   ========================= */
+@media (max-width: 1100px) {
+    .main-layout {
+        grid-template-columns: 1fr;
+    }
 
+    .filters-sidebar {
+        position: static;
+    }
+}
+
+@media (max-width: 900px) {
+    .toolbar-line {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas:
+            "filters filters"
+            "results views";
+        align-items: start;
+        gap: 0.9rem 1rem;
+    }
+
+    .active-filters {
+        grid-area: filters;
+        min-width: 0;
+        flex: unset;
+    }
+
+    .quick-filters-bar {
+        grid-area: filters;
+        width: 100%;
+        justify-content: flex-start;
+        margin-top: 0.35rem;
+    }
+
+    .results-count {
+        grid-area: results;
+        align-self: center;
+    }
+
+    .view-toggles {
+        grid-area: views;
+        margin-left: 0;
+        justify-self: end;
+        align-self: center;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        overflow-x: hidden;
+    }
+
+    .app-container {
+        padding: 0.75rem;
+    }
+
+    .main-layout {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .filters-sidebar {
+        position: static;
+        width: 100%;
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .dashboard-content {
+        min-width: 0;
+    }
+
+    .data-container {
+        overflow-x: auto;
+        overflow-y: visible;
+    }
+
+    .premium-details,
+    .job-highlight-row,
+    .modal-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .job-card-footer,
+    .pagination-bar,
+    .modal-actions {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .card-action-btn {
+        width: 100%;
+    }
+
+    .vacancy-modal-header {
+        flex-direction: column;
+        padding-right: 0;
+    }
+
+    .modal-chip-row {
+        justify-content: flex-start;
+    }
+
+    .loading-kpi-row {
+        grid-template-columns: 1fr;
+    }
+
+    .cards-grid {
+        grid-template-columns: 1fr !important;
+        gap: 1rem;
+    }
+
+    .job-card {
+        padding: 1rem;
+    }
+
+    .job-card-top {
+        padding-right: 2.8rem;
+    }
+
+    .job-title {
+        font-size: 1.2rem;
+    }
+
+    .toolbar-line {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 0.8rem;
+        align-items: stretch;
+    }
+
+    .results-count {
+        order: 2;
+    }
+
+    .active-filters {
+        order: 1;
+        width: 100%;
+    }
+
+    .quick-filters-bar {
+        order: 3;
+        width: 100%;
+        justify-content: flex-start;
+    }
+
+    .view-toggles {
+        order: 4;
+        margin-left: 0;
+        justify-content: flex-end;
+    }
+}
+
+@media (max-width: 640px) {
+    .app-container {
+        padding: 1rem;
+    }
+
+    .app-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+
+    .toolbar-line {
+        padding: 0.9rem 1rem;
+    }
+
+    .active-filters,
+    .quick-filters-bar {
+        width: 100%;
+    }
+
+    .modal-content {
+        padding: 1.25rem;
+    }
+
+    .vacancy-modal-title {
+        font-size: 1.45rem;
+    }
+
+    .kpi-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .header-logo h1 {
+        font-size: 1.2rem;
+    }
+}
+
+/* MOBILE FILTER ACCORDION — PROFESSIONAL VERSION */
 .mobile-filter-toggle {
     display: none;
 }
 
 @media (max-width: 768px) {
-    .filters-sidebar {
-        padding: 1rem;
-        overflow: hidden;
-    }
-
     .mobile-filter-toggle {
         width: 100%;
         display: flex;
@@ -1743,21 +1634,7 @@ select:focus {
         transform: rotate(180deg);
     }
 
-    /* Reliable collapse: hide everything except toggle button */
     .filters-sidebar.collapsed > :not(.mobile-filter-toggle) {
         display: none !important;
-    }
-
-    .filters-sidebar:not(.collapsed) > :not(.mobile-filter-toggle) {
-        display: revert;
-    }
-
-    /* keep filters section neat when opened */
-    .filters-sidebar:not(.collapsed) .filters-header {
-        margin-bottom: 1rem;
-    }
-
-    .filters-sidebar:not(.collapsed) .filter-group {
-        margin-bottom: 1rem;
     }
 }
