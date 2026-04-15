@@ -9,6 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const dataContainer = document.getElementById('dataContainer');
     const activeFilters = document.getElementById('activeFilters');
     const dashboardContent = document.querySelector('.dashboard-content');
+    const filtersSidebar = document.querySelector('.filters-sidebar');
 
     const searchPost = document.getElementById('searchPost');
     const filterMyPayLevel = document.getElementById('filterMyPayLevel');
@@ -29,10 +30,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const modalBody = document.getElementById('modalBody');
 
     let previousKpiSnapshot = null;
-   
-
     let rawData = [];
     let currentView = 'table';
+    let watchlist = loadWatchlist();
+    let showWatchlistOnly = false;
 
     let sortState = {
         key: 'Days_Left',
@@ -43,9 +44,6 @@ document.addEventListener('DOMContentLoaded', () => {
         currentPage: 1,
         pageSize: 10
     };
-
-    let watchlist = loadWatchlist();
-    let showWatchlistOnly = false;
 
     let quickFilters = {
         closing7: false,
@@ -58,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let quickFiltersBar = null;
 
     initializeEnhancements();
+    initializeMobileFilterAccordion();
     initializeModal();
     updateWatchlistUI();
     setLoadingUI();
@@ -102,8 +101,57 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function createQuickFiltersBar() {
-    quickFiltersBar = document.getElementById('quickFiltersBar');
-}
+        quickFiltersBar = document.getElementById('quickFiltersBar');
+    }
+
+    function initializeMobileFilterAccordion() {
+        if (!filtersSidebar) return;
+
+        let toggleBtn = filtersSidebar.querySelector('.mobile-filter-toggle');
+
+        if (!toggleBtn) {
+            toggleBtn = document.createElement('button');
+            toggleBtn.type = 'button';
+            toggleBtn.className = 'mobile-filter-toggle';
+            toggleBtn.setAttribute('aria-expanded', 'false');
+            toggleBtn.innerHTML = `
+                <span>Show Filters</span>
+                <i data-lucide="chevron-down"></i>
+            `;
+            filtersSidebar.insertBefore(toggleBtn, filtersSidebar.firstChild);
+        }
+
+        toggleBtn.addEventListener('click', () => {
+            const isCollapsed = filtersSidebar.classList.toggle('collapsed');
+            updateMobileFilterToggle(!isCollapsed);
+            lucide.createIcons();
+        });
+
+        applyMobileFilterDefaultState();
+        window.addEventListener('resize', applyMobileFilterDefaultState);
+        lucide.createIcons();
+    }
+
+    function applyMobileFilterDefaultState() {
+        if (!filtersSidebar) return;
+
+        const mobile = window.innerWidth <= 768;
+        const shouldBeCollapsed = mobile;
+
+        filtersSidebar.classList.toggle('collapsed', shouldBeCollapsed);
+        updateMobileFilterToggle(!shouldBeCollapsed);
+    }
+
+    function updateMobileFilterToggle(isExpanded) {
+        const toggleBtn = filtersSidebar?.querySelector('.mobile-filter-toggle');
+        if (!toggleBtn) return;
+
+        toggleBtn.setAttribute('aria-expanded', String(isExpanded));
+        toggleBtn.innerHTML = `
+            <span>${isExpanded ? 'Hide Filters' : 'Show Filters'}</span>
+            <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}"></i>
+        `;
+    }
 
     function setLoadingUI() {
         dataContainer.innerHTML = `
@@ -217,24 +265,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function bindEvents() {
-       /* Search box */
         searchPost.addEventListener('input', () => {
-    refreshSearchSuggestions(searchPost.value);
-    onFilterChange();
-});
+            refreshSearchSuggestions(searchPost.value);
+            onFilterChange();
+        });
 
-/* Dropdown filters */
-[
-    filterMyPayLevel,
-    filterLevel,
-    filterMinistry,
-    filterLocation,
-    filterStatus
-].forEach(el => {
-    el.addEventListener('change', onFilterChange);
-});
+        [
+            filterMyPayLevel,
+            filterLevel,
+            filterMinistry,
+            filterLocation,
+            filterStatus
+        ].forEach(el => {
+            el.addEventListener('change', onFilterChange);
+        });
 
-        
         if (quickFiltersBar) {
             quickFiltersBar.addEventListener('click', (e) => {
                 const btn = e.target.closest('[data-quick-filter]');
@@ -308,15 +353,15 @@ document.addEventListener('DOMContentLoaded', () => {
             renderDashboard();
         });
 
-window.addEventListener('resize', () => {
-    if (window.innerWidth <= 768 && currentView !== 'card') {
-        currentView = 'card';
-        btnCardView.classList.add('active');
-        btnTableView.classList.remove('active');
-        renderDashboard(false);
-    }
-});
-        
+        window.addEventListener('resize', () => {
+            if (window.innerWidth <= 768 && currentView !== 'card') {
+                currentView = 'card';
+                btnCardView.classList.add('active');
+                btnTableView.classList.remove('active');
+                renderDashboard(false);
+            }
+        });
+
         dataContainer.addEventListener('click', (e) => {
             const sortBtn = e.target.closest('[data-sort]');
             if (sortBtn) {
@@ -436,14 +481,14 @@ window.addEventListener('resize', () => {
         lucide.createIcons();
     }
 
-function applyMobileDefaultView() {
-    if (window.innerWidth <= 768) {
-        currentView = 'card';
-        btnCardView.classList.add('active');
-        btnTableView.classList.remove('active');
+    function applyMobileDefaultView() {
+        if (window.innerWidth <= 768) {
+            currentView = 'card';
+            btnCardView.classList.add('active');
+            btnTableView.classList.remove('active');
+        }
     }
-}
-    
+
     function getFilteredData() {
         const search = searchPost.value.trim().toLowerCase();
         const myPayLevel = filterMyPayLevel.value;
@@ -517,7 +562,7 @@ function applyMobileDefaultView() {
         });
     }
 
-         function sortData(data) {
+    function sortData(data) {
         const direction = sortState.direction === 'asc' ? 1 : -1;
         const key = sortState.key;
 
@@ -575,88 +620,88 @@ function applyMobileDefaultView() {
         return data.slice(start, end);
     }
 
-function getKpiSnapshot(filteredData) {
-    return {
-        total: filteredData.length,
-        active: filteredData.filter(d => safe(d.Status) === 'Active').length,
-        closingSoon: filteredData.filter(d => {
-            const days = parseInt(d.Days_Left, 10);
-            return !Number.isNaN(days) && days >= 0 && days <= 15;
-        }).length,
-        ministries: new Set(
-            filteredData.map(d => safe(d.Ministry)).filter(Boolean)
-        ).size
-    };
-}
+    function getKpiSnapshot(filteredData) {
+        return {
+            total: filteredData.length,
+            active: filteredData.filter(d => safe(d.Status) === 'Active').length,
+            closingSoon: filteredData.filter(d => {
+                const days = parseInt(d.Days_Left, 10);
+                return !Number.isNaN(days) && days >= 0 && days <= 15;
+            }).length,
+            ministries: new Set(
+                filteredData.map(d => safe(d.Ministry)).filter(Boolean)
+            ).size
+        };
+    }
+
     function renderKPIs(filteredData) {
-    const current = getKpiSnapshot(filteredData);
-    const previous = previousKpiSnapshot;
+        const current = getKpiSnapshot(filteredData);
+        const previous = previousKpiSnapshot;
 
-    const totalDelta = previous ? current.total - previous.total : 0;
-    const activeDelta = previous ? current.active - previous.active : 0;
-    const closingSoonDelta = previous ? current.closingSoon - previous.closingSoon : 0;
-    const ministriesDelta = previous ? current.ministries - previous.ministries : 0;
+        const totalDelta = previous ? current.total - previous.total : 0;
+        const activeDelta = previous ? current.active - previous.active : 0;
+        const closingSoonDelta = previous ? current.closingSoon - previous.closingSoon : 0;
+        const ministriesDelta = previous ? current.ministries - previous.ministries : 0;
 
-    kpiGrid.innerHTML = `
-        ${buildKpiCard('Total Vacancies', current.total, 'briefcase', 'cyan', totalDelta)}
-        ${buildKpiCard('Active', current.active, 'check-circle-2', 'green', activeDelta)}
-        ${buildKpiCard('Closing Soon', current.closingSoon, 'clock-3', 'red', closingSoonDelta)}
-        ${buildKpiCard('Ministries', current.ministries, 'building-2', 'purple', ministriesDelta)}
-    `;
+        kpiGrid.innerHTML = `
+            ${buildKpiCard('Total Vacancies', current.total, 'briefcase', 'cyan', totalDelta)}
+            ${buildKpiCard('Active', current.active, 'check-circle-2', 'green', activeDelta)}
+            ${buildKpiCard('Closing Soon', current.closingSoon, 'clock-3', 'red', closingSoonDelta)}
+            ${buildKpiCard('Ministries', current.ministries, 'building-2', 'purple', ministriesDelta)}
+        `;
 
-    animateKpiCounters();
-    previousKpiSnapshot = current;
-}
+        animateKpiCounters();
+        previousKpiSnapshot = current;
+    }
+
     function buildKpiCard(title, value, icon, tone, delta) {
-    const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
-    const trendSymbol = delta > 0 ? '↑' : delta < 0 ? '↓' : '•';
-    const trendText = delta === 0 ? 'No change' : `${trendSymbol} ${Math.abs(delta)}`;
+        const trendClass = delta > 0 ? 'up' : delta < 0 ? 'down' : 'flat';
+        const trendSymbol = delta > 0 ? '↑' : delta < 0 ? '↓' : '•';
+        const trendText = delta === 0 ? 'No change' : `${trendSymbol} ${Math.abs(delta)}`;
 
-    return `
-        <div class="kpi-card kpi-${tone}">
-            <div class="kpi-icon">
-                <i data-lucide="${icon}"></i>
+        return `
+            <div class="kpi-card kpi-${tone}">
+                <div class="kpi-icon">
+                    <i data-lucide="${icon}"></i>
+                </div>
+
+                <div class="kpi-title">${title}</div>
+
+                <div class="kpi-value" data-count="${value}">0</div>
+
+                <div class="kpi-trend ${trendClass}">
+                    ${trendText}
+                </div>
             </div>
+        `;
+    }
 
-            <div class="kpi-title">${title}</div>
+    function animateKpiCounters() {
+        const counters = kpiGrid.querySelectorAll('.kpi-value[data-count]');
 
-            <div class="kpi-value" data-count="${value}">0</div>
+        counters.forEach(counter => {
+            const target = Number(counter.getAttribute('data-count')) || 0;
+            const duration = 700;
+            const startTime = performance.now();
 
-            <div class="kpi-trend ${trendClass}">
-                ${trendText}
-            </div>
-        </div>
-    `;
-}
+            function update(now) {
+                const progress = Math.min((now - startTime) / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const currentValue = Math.round(target * eased);
 
+                counter.textContent = currentValue.toLocaleString();
 
-function animateKpiCounters() {
-    const counters = kpiGrid.querySelectorAll('.kpi-value[data-count]');
-
-    counters.forEach(counter => {
-        const target = Number(counter.getAttribute('data-count')) || 0;
-        const duration = 700;
-        const startTime = performance.now();
-
-        function update(now) {
-            const progress = Math.min((now - startTime) / duration, 1);
-            const eased = 1 - Math.pow(1 - progress, 3);
-            const currentValue = Math.round(target * eased);
-
-            counter.textContent = currentValue.toLocaleString();
-
-            if (progress < 1) {
-                requestAnimationFrame(update);
-            } else {
-                counter.textContent = target.toLocaleString();
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = target.toLocaleString();
+                }
             }
-        }
 
-        requestAnimationFrame(update);
-    });
-}
+            requestAnimationFrame(update);
+        });
+    }
 
-    
     function updateWatchlistUI() {
         favCount.textContent = String(watchlist.size || 0);
         favBtn.classList.toggle('active', showWatchlistOnly);
@@ -712,106 +757,107 @@ function animateKpiCounters() {
         `;
     }
 
-   function renderTable(data) {
-    const rows = data.map(item => {
-        const vacancyId = safe(item.Vacancy_ID);
-        const saved = watchlist.has(vacancyId);
-        const daysLeft = parseInt(item.Days_Left, 10);
-        const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
-        const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
-        const applyLink = normalizeUrl(safe(item.Application_Form_Link));
+    function renderTable(data) {
+        const rows = data.map(item => {
+            const vacancyId = safe(item.Vacancy_ID);
+            const saved = watchlist.has(vacancyId);
+            const daysLeft = parseInt(item.Days_Left, 10);
+            const closingSoon = !Number.isNaN(daysLeft) && daysLeft >= 0 && daysLeft <= 15;
+            const detailedNotificationLink = normalizeUrl(safe(item.Official_Notification_Link));
+            const applyLink = normalizeUrl(safe(item.Application_Form_Link));
+
+            return `
+                <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
+                    <td class="table-heart-cell" data-label="Save">
+                        <button
+                            type="button"
+                            class="table-heart-btn ${saved ? 'saved' : ''}"
+                            data-table-action="watchlist"
+                            data-id="${escapeHtml(vacancyId)}"
+                            title="Bookmark the Vacancy"
+                            aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
+                            aria-pressed="${saved ? 'true' : 'false'}"
+                        >
+                            <i data-lucide="heart"></i>
+                        </button>
+                    </td>
+
+                    <td data-label="Post Name">
+                        <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
+                        <div class="table-subtext">
+                            ${escapeHtml(safe(item.Department_Organisation) || '')}
+                        </div>
+                    </td>
+
+                    <td data-label="Level">${escapeHtml(safe(item.Level_Text) || '—')}</td>
+                    <td data-label="Eligibility">${escapeHtml(formatEligibility(item))}</td>
+                    <td data-label="Ministry">${escapeHtml(safe(item.Ministry) || '—')}</td>
+                    <td data-label="Location">${escapeHtml(formatLocation(item) || '—')}</td>
+
+                    <td data-label="Days Left" class="days-left ${closingSoon ? 'closing' : ''}">
+                        ${escapeHtml(formatDaysLeft(daysLeft))}
+                    </td>
+
+                    <td data-label="Status">
+                        <span class="badge ${safe(item.Status) === 'Active' ? 'badge-active' : ''}">
+                            ${escapeHtml(safe(item.Status) || '—')}
+                        </span>
+                    </td>
+
+                    <td data-label="Notification" class="table-link-cell">
+                        ${detailedNotificationLink ? `
+                            <a
+                                class="table-link-btn"
+                                href="${escapeHtml(detailedNotificationLink)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onclick="event.stopPropagation();"
+                            >
+                                Detailed Notification
+                            </a>
+                        ` : '—'}
+                    </td>
+
+                    <td data-label="Apply" class="table-link-cell">
+                        ${applyLink ? `
+                            <a
+                                class="table-link-btn apply"
+                                href="${escapeHtml(applyLink)}"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onclick="event.stopPropagation();"
+                            >
+                                Apply
+                            </a>
+                        ` : '—'}
+                    </td>
+                </tr>
+            `;
+        }).join('');
 
         return `
-            <tr class="clickable-row" data-open-details="${escapeHtml(vacancyId)}">
-                <td class="table-heart-cell" data-label="Save">
-                    <button
-                        type="button"
-                        class="table-heart-btn ${saved ? 'saved' : ''}"
-                        data-table-action="watchlist"
-                        data-id="${escapeHtml(vacancyId)}"
-                        title="Bookmark the Vacancy"
-                        aria-label="${saved ? 'Remove bookmarked vacancy' : 'Bookmark the Vacancy'}"
-                        aria-pressed="${saved ? 'true' : 'false'}"
-                    >
-                        <i data-lucide="heart"></i>
-                    </button>
-                </td>
-
-                <td data-label="Post Name">
-                    <strong>${escapeHtml(safe(item.Post_Name) || '—')}</strong>
-                    <div class="table-subtext">
-                        ${escapeHtml(safe(item.Department_Organisation) || '')}
-                    </div>
-                </td>
-
-                <td data-label="Level">${escapeHtml(safe(item.Level_Text) || '—')}</td>
-                <td data-label="Eligibility">${escapeHtml(formatEligibility(item))}</td>
-                <td data-label="Ministry">${escapeHtml(safe(item.Ministry) || '—')}</td>
-                <td data-label="Location">${escapeHtml(formatLocation(item) || '—')}</td>
-
-                <td data-label="Days Left" class="days-left ${closingSoon ? 'closing' : ''}">
-                    ${escapeHtml(formatDaysLeft(daysLeft))}
-                </td>
-
-                <td data-label="Status">
-                    <span class="badge ${safe(item.Status) === 'Active' ? 'badge-active' : ''}">
-                        ${escapeHtml(safe(item.Status) || '—')}
-                    </span>
-                </td>
-
-                <td data-label="Notification" class="table-link-cell">
-                    ${detailedNotificationLink ? `
-                        <a
-                            class="table-link-btn"
-                            href="${escapeHtml(detailedNotificationLink)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onclick="event.stopPropagation();"
-                        >
-                            Detailed Notification
-                        </a>
-                    ` : '—'}
-                </td>
-
-                <td data-label="Apply" class="table-link-cell">
-                    ${applyLink ? `
-                        <a
-                            class="table-link-btn apply"
-                            href="${escapeHtml(applyLink)}"
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            onclick="event.stopPropagation();"
-                        >
-                            Apply
-                        </a>
-                    ` : '—'}
-                </td>
-            </tr>
+            <div class="table-wrapper">
+                <table class="data-table responsive-table">
+                    <thead>
+                        <tr>
+                            <th>Save</th>
+                            ${renderSortableHeader('Post Name', 'Post_Name')}
+                            ${renderSortableHeader('Level', 'Level_Text')}
+                            ${renderSortableHeader('Eligibility', 'Eligibility')}
+                            ${renderSortableHeader('Ministry', 'Ministry')}
+                            ${renderSortableHeader('Location', 'Location')}
+                            ${renderSortableHeader('Days Left', 'Days_Left')}
+                            ${renderSortableHeader('Status', 'Status')}
+                            <th>Notification</th>
+                            <th>Apply</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
         `;
-    }).join('');
+    }
 
-    return `
-        <div class="table-wrapper">
-            <table class="data-table responsive-table">
-                <thead>
-                    <tr>
-                        <th>Save</th>
-                        ${renderSortableHeader('Post Name', 'Post_Name')}
-                        ${renderSortableHeader('Level', 'Level_Text')}
-                        ${renderSortableHeader('Eligibility', 'Eligibility')}
-                        ${renderSortableHeader('Ministry', 'Ministry')}
-                        ${renderSortableHeader('Location', 'Location')}
-                        ${renderSortableHeader('Days Left', 'Days_Left')}
-                        ${renderSortableHeader('Status', 'Status')}
-                        <th>Notification</th>
-                        <th>Apply</th>
-                    </tr>
-                </thead>
-                <tbody>${rows}</tbody>
-            </table>
-        </div>
-    `;
-}
     function renderSortableHeader(label, key) {
         const active = sortState.key === key;
         const dir = sortState.direction === 'asc' ? '↑' : '↓';
@@ -1479,4 +1525,4 @@ function animateKpiCounters() {
             .replaceAll('"', '&quot;')
             .replaceAll("'", '&#39;');
     }
-});                     
+});
