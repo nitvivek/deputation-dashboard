@@ -105,53 +105,71 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function initializeMobileFilterAccordion() {
-        if (!filtersSidebar) return;
+    if (!filtersSidebar) return;
 
-        let toggleBtn = filtersSidebar.querySelector('.mobile-filter-toggle');
+    let toggleBtn = filtersSidebar.querySelector('.mobile-filter-toggle');
 
-        if (!toggleBtn) {
-            toggleBtn = document.createElement('button');
-            toggleBtn.type = 'button';
-            toggleBtn.className = 'mobile-filter-toggle';
-            toggleBtn.setAttribute('aria-expanded', 'false');
-            toggleBtn.innerHTML = `
-                <span>Show Filters</span>
-                <i data-lucide="chevron-down"></i>
-            `;
-            filtersSidebar.insertBefore(toggleBtn, filtersSidebar.firstChild);
-        }
-
-        toggleBtn.addEventListener('click', () => {
-            const isCollapsed = filtersSidebar.classList.toggle('collapsed');
-            updateMobileFilterToggle(!isCollapsed);
-            lucide.createIcons();
-        });
-
-        applyMobileFilterDefaultState();
-        window.addEventListener('resize', applyMobileFilterDefaultState);
-        lucide.createIcons();
-    }
-
-    function applyMobileFilterDefaultState() {
-        if (!filtersSidebar) return;
-
-        const mobile = window.innerWidth <= 768;
-        const shouldBeCollapsed = mobile;
-
-        filtersSidebar.classList.toggle('collapsed', shouldBeCollapsed);
-        updateMobileFilterToggle(!shouldBeCollapsed);
-    }
-
-    function updateMobileFilterToggle(isExpanded) {
-        const toggleBtn = filtersSidebar?.querySelector('.mobile-filter-toggle');
-        if (!toggleBtn) return;
-
-        toggleBtn.setAttribute('aria-expanded', String(isExpanded));
+    if (!toggleBtn) {
+        toggleBtn = document.createElement('button');
+        toggleBtn.type = 'button';
+        toggleBtn.className = 'mobile-filter-toggle';
+        toggleBtn.setAttribute('aria-expanded', 'false');
         toggleBtn.innerHTML = `
-            <span>${isExpanded ? 'Hide Filters' : 'Show Filters'}</span>
-            <i data-lucide="${isExpanded ? 'chevron-up' : 'chevron-down'}"></i>
+            <span class="mobile-filter-toggle-left">
+                <i data-lucide="sliders-horizontal"></i>
+                <span class="mobile-filter-toggle-label">Show Filters</span>
+            </span>
+            <span class="mobile-filter-toggle-right">
+                <i data-lucide="chevron-down" class="mobile-filter-chevron"></i>
+            </span>
         `;
+        filtersSidebar.insertBefore(toggleBtn, filtersSidebar.firstChild);
     }
+
+    toggleBtn.addEventListener('click', () => {
+        if (window.innerWidth > 768) return;
+
+        filtersSidebar.classList.toggle('collapsed');
+        updateMobileFilterToggle();
+        lucide.createIcons();
+    });
+
+    applyMobileFilterDefaultState();
+    window.addEventListener('resize', applyMobileFilterDefaultState);
+    lucide.createIcons();
+}
+
+function applyMobileFilterDefaultState() {
+    if (!filtersSidebar) return;
+
+    const isMobile = window.innerWidth <= 768;
+
+    if (isMobile) {
+        if (!filtersSidebar.dataset.mobileAccordionInitialized) {
+            filtersSidebar.classList.add('collapsed');
+            filtersSidebar.dataset.mobileAccordionInitialized = 'true';
+        }
+    } else {
+        filtersSidebar.classList.remove('collapsed');
+        delete filtersSidebar.dataset.mobileAccordionInitialized;
+    }
+
+    updateMobileFilterToggle();
+}
+
+function updateMobileFilterToggle() {
+    const toggleBtn = filtersSidebar?.querySelector('.mobile-filter-toggle');
+    if (!toggleBtn) return;
+
+    const expanded = !filtersSidebar.classList.contains('collapsed');
+    const label = toggleBtn.querySelector('.mobile-filter-toggle-label');
+
+    if (label) {
+        label.textContent = expanded ? 'Hide Filters' : 'Show Filters';
+    }
+
+    toggleBtn.setAttribute('aria-expanded', String(expanded));
+}
 
     function setLoadingUI() {
         dataContainer.innerHTML = `
