@@ -1673,3 +1673,91 @@ select:focus {
         align-items: flex-start;
     }
 }
+
+/* =========================
+   MOBILE FILTER ACCORDION — PROFESSIONAL VERSION
+   ========================= */
+
+.mobile-filter-toggle {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .filters-sidebar {
+        padding: 1rem;
+        overflow: hidden;
+    }
+
+    .mobile-filter-toggle {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+        padding: 0.9rem 1rem;
+        margin-bottom: 0.85rem;
+        border-radius: 16px;
+        border: 1px solid rgba(34, 211, 238, 0.18);
+        background: linear-gradient(145deg, rgba(15, 23, 42, 0.96), rgba(30, 41, 59, 0.9));
+        color: var(--text-primary);
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: var(--shadow-glass);
+        transition: all 0.25s ease;
+        appearance: none;
+        -webkit-appearance: none;
+    }
+
+    .mobile-filter-toggle:hover {
+        border-color: rgba(34, 211, 238, 0.32);
+        box-shadow:
+            0 0 0 1px rgba(34, 211, 238, 0.10),
+            0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .mobile-filter-toggle-left,
+    .mobile-filter-toggle-right {
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .mobile-filter-toggle-left svg,
+    .mobile-filter-toggle-right svg {
+        width: 18px;
+        height: 18px;
+        color: var(--primary-color);
+    }
+
+    .mobile-filter-toggle-label {
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    .mobile-filter-chevron {
+        transition: transform 0.25s ease;
+    }
+
+    .filters-sidebar:not(.collapsed) .mobile-filter-chevron {
+        transform: rotate(180deg);
+    }
+
+    /* Reliable collapse: hide everything except toggle button */
+    .filters-sidebar.collapsed > :not(.mobile-filter-toggle) {
+        display: none !important;
+    }
+
+    .filters-sidebar:not(.collapsed) > :not(.mobile-filter-toggle) {
+        display: revert;
+    }
+
+    /* keep filters section neat when opened */
+    .filters-sidebar:not(.collapsed) .filters-header {
+        margin-bottom: 1rem;
+    }
+
+    .filters-sidebar:not(.collapsed) .filter-group {
+        margin-bottom: 1rem;
+    }
+}
